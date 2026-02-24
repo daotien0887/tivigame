@@ -1,0 +1,17 @@
+{
+    "physics": {
+        "gravity": 200,
+        "jumpVelocity": -150
+    },
+    "pipes": {
+        "speed": -200,
+        "spawnDelay": 2800,
+        "gap": 480,
+        "width": 100,
+        "height": 2000
+    },
+    "bird": {
+        "scale": 0.15,
+        "hitboxScale": 0.7
+    }
+}

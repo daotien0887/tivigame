@@ -1,0 +1,230 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #121212;
+    color: white;
+    overflow: hidden;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.connect-screen {
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+input {
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+button {
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+    background: #646cff;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.controller-screen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1a1a1a;
+    border-bottom: 1px solid #333;
+}
+
+.player-badge {
+    background: #444;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.game-id-badge {
+    color: #646cff;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.controller-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.controller-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 20px;
+}
+
+.dpad-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dpad {
+    position: relative;
+    width: 240px;
+    height: 240px;
+}
+
+.dpad button {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: #333;
+    padding: 0;
+}
+
+.dpad .up {
+    top: 0;
+    left: 80px;
+    border-radius: 10px 10px 0 0;
+}
+
+.dpad .down {
+    bottom: 0;
+    left: 80px;
+    border-radius: 0 0 10px 10px;
+}
+
+.dpad .left {
+    top: 80px;
+    left: 0;
+    border-radius: 10px 0 0 10px;
+}
+
+.dpad .right {
+    top: 80px;
+    right: 0;
+    border-radius: 0 10px 10px 0;
+}
+
+.dpad .center {
+    position: absolute;
+    top: 80px;
+    left: 80px;
+    width: 80px;
+    height: 80px;
+    background: #333;
+}
+
+.action-container {
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-ok {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    background: #ff4444;
+    box-shadow: 0 6px 0 #cc0000;
+}
+
+.btn-ok:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #cc0000;
+}
+
+/* Flappy Controller */
+.flappy-controller {
+    background: linear-gradient(to bottom, #4ec0ca, #2e909a);
+    text-align: center;
+}
+
+.jump-zone {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-jump {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: #f7941d;
+    border: 8px solid #fff;
+    box-shadow: 0 10px 0 #d67b00;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.1s;
+}
+
+.btn-jump:active {
+    transform: translateY(10px);
+    box-shadow: 0 0 0 #d67b00;
+}
+
+.btn-jump span {
+    font-size: 2rem;
+}
+
+.webview-warning {
+    padding: 40px;
+    text-align: center;
+    color: #ff4444;
+}
+
+.icon-btn,
+.disconnect-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.icon-btn:active,
+.disconnect-btn:active {
+    color: #fff;
+    transform: scale(0.9);
+}
