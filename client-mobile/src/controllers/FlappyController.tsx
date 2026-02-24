@@ -16,7 +16,7 @@ export const FlappyController: React.FC<Props> = ({ onInput, gameState }) => {
                 <p>{isGameOver ? 'Nhấn REPLAY để chơi lại' : 'Chạm vào bất cứ đâu để JUMP!'}</p>
             </div>
 
-            <div className="jump-zone" onClick={() => onInput(isGameOver ? 'SELECT' : 'JUMP')}>
+            <div className="jump-zone" onClick={() => onInput(isGameOver ? 'REPLAY' : 'JUMP')}>
                 {isGameOver ? (
                     <button className="btn-jump replay" style={{ background: '#444' }}>
                         <RotateCcw size={64} />

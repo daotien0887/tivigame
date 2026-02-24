@@ -76,14 +76,30 @@ io.on('connection', (socket) => {
 
     // Relay actions from Host to all Controllers
     socket.on('update_game_state', (data) => {
-        console.log(`Server received update_game_state for room ${data.roomId}:`, data);
-        const room = roomManager.rooms.get(data.roomId);
+        console.log(`[update_game_state] received from ${socket.id}:`, data);
+
+        // Primary: use roomId from data
+        let room = data.roomId ? roomManager.rooms.get(data.roomId) : null;
+
+        // Fallback: look up room by this socket's host status
+        if (!room) {
+            const found = roomManager.getRoomByHost(socket.id);
+            if (found) {
+                room = found;
+                data.roomId = found.roomId;
+                console.log(`[update_game_state] fallback found room by host: ${found.roomId}`);
+            }
+        }
+
         if (room && room.hostId === socket.id) {
             roomManager.updateGameState(data.roomId, data.gameId, data.gameState);
+            // Broadcast to all controllers in the room (not the host)
             socket.to(data.roomId).emit('game_state_changed', data);
-            console.log(`Broadcasted game_state_changed to room ${data.roomId}`);
+            console.log(`[update_game_state] broadcasted game_state_changed to room ${data.roomId}:`, data.gameState);
         } else {
-            console.log(`Failed to update game state: Room not found or not authorized.`, {
+            console.warn(`[update_game_state] FAILED - no room or not authorized`, {
+                roomId: data.roomId,
+                socketId: socket.id,
                 hasRoom: !!room,
                 isHost: room ? room.hostId === socket.id : false
             });
