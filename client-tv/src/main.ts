@@ -4,7 +4,7 @@ import QRCode from 'qrcode';
 import { GameBase } from './games/GameBase';
 import { FlappyBird } from './games/flappy_bird';
 
-const SERVER_URL = 'http://localhost:3001';
+const SERVER_URL = 'https://api.tivigame.com';
 const socket = io(SERVER_URL);
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -27,7 +27,7 @@ function renderWelcome() {
                     <strong id="room-pin">----</strong>
                 </div>
             </div>
-            <p>Sử dụng điện thoại quét mã QR hoặc truy cập <strong>tivigame.com</strong> và nhập PIN để kết nối.</p>
+            <p>Sử dụng điện thoại quét mã QR hoặc truy cập <strong>m.tivigame.com</strong> và nhập PIN để kết nối.</p>
             <div id="status-msg">Đang khởi tạo phòng...</div>
         </div>
     `;
@@ -40,7 +40,7 @@ function updateRoomInfo(roomId: string) {
 
     const qrCanvas = document.querySelector('#qrcode') as HTMLCanvasElement;
     // URL sẽ trỏ đến trang mobile controller kèm roomId trên port 5174
-    const controllerUrl = `http://${window.location.hostname}:5174/?room=${roomId}`;
+    const controllerUrl = `https://m.tivigame.com/?room=${roomId}`;
     QRCode.toCanvas(qrCanvas, controllerUrl, { width: 256 }, (error) => {
         if (error) console.error(error);
     });
