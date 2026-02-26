@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import QRCode from 'qrcode';
 import { GameBase } from './games/GameBase';
 import { FlappyBird } from './games/flappy_bird';
+import { GoldMiner } from './games/gold_miner';
 
 const SERVER_URL = 'https://api.tivigame.com';
 const socket = io(SERVER_URL);
@@ -58,16 +59,16 @@ function renderHub() {
             </header>
             <main id="game-list">
                 <div class="game-card focused">
-                    <img src="https://via.placeholder.com/150" alt="Flappy Bird">
+                    <img src="https://via.placeholder.com/150?text=🐦" alt="Flappy Bird">
                     <h3>Flappy Bird</h3>
+                </div>
+                <div class="game-card">
+                    <img src="https://via.placeholder.com/150?text=⛏️" alt="Gold Miner">
+                    <h3>Gold Miner</h3>
                 </div>
                 <div class="game-card">
                     <img src="https://via.placeholder.com/150" alt="Racing Car">
                     <h3>Racing Car</h3>
-                </div>
-                <div class="game-card">
-                    <img src="https://via.placeholder.com/150" alt="Tank Battle">
-                    <h3>Tank Battle</h3>
                 </div>
             </main>
             <footer>
@@ -174,6 +175,9 @@ function launchGame() {
 
     if (gameId === 'flappy_bird') {
         state.activeGame = new FlappyBird(container, exitToHub, socket);
+        state.activeGame.init();
+    } else if (gameId === 'gold_miner') {
+        state.activeGame = new GoldMiner(container, exitToHub, socket);
         state.activeGame.init();
     } else {
         container.innerHTML = `

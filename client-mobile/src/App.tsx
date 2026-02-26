@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from './hooks/useSocket';
 import { Power } from 'lucide-react';
 import { HubController } from './controllers/HubController';
 import { FlappyController } from './controllers/FlappyController';
+import { GoldMinerController } from './controllers/GoldMinerController';
 
 console.log('Controllers loading:', { HubController, FlappyController });
 
@@ -13,6 +14,13 @@ function App() {
     const [controllerInfo, setControllerInfo] = useState<any>(null);
     const [isWebview, setIsWebview] = useState(false);
     const [currentGame, setCurrentGame] = useState({ id: 'hub', state: 'idle' });
+
+    // Ref to always have the latest roomId inside socket callbacks (avoids stale closure)
+    const roomIdRef = useRef('');
+    useEffect(() => { roomIdRef.current = roomId; }, [roomId]);
+
+    const isJoinedRef = useRef(false);
+    useEffect(() => { isJoinedRef.current = isJoined; }, [isJoined]);
 
     // 1. Initial Checks
     useEffect(() => {
@@ -70,18 +78,54 @@ function App() {
             window.location.reload();
         };
 
+        // On reconnect: auto-rejoin room so socket is back in the room and
+        // receives future broadcasts. Server will respond with joined_room + current state.
+        const onConnect = () => {
+            const rid = roomIdRef.current;
+            if (rid && isJoinedRef.current) {
+                console.log('[socket] reconnected — auto-rejoining room', rid);
+                socket.emit('join_room', { roomId: rid, profile: { name: 'Player', color: 'blue' } });
+            }
+        };
+
+        const onDisconnect = (reason: string) => {
+            console.log('[socket] disconnected:', reason);
+            // Keep isJoined=true so UI doesn't flash to connect screen during brief drops
+        };
+
         socket.on('joined_room', onJoined);
         socket.on('game_state_changed', onGameStateChanged);
         socket.on('error_message', onError);
         socket.on('host_disconnected', onHostDown);
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
 
         return () => {
             socket.off('joined_room', onJoined);
             socket.off('game_state_changed', onGameStateChanged);
             socket.off('error_message', onError);
             socket.off('host_disconnected', onHostDown);
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
         };
     }, [socket]);
+
+    // 3. State-sync heartbeat: every 30s ask server for current TV state.
+    //    Handles de-sync after reconnect or network hiccups — no TV changes needed.
+    useEffect(() => {
+        if (!socket || !isJoined || !roomId) return;
+
+        const sync = () => {
+            console.log('[state_sync] requesting state for room', roomId);
+            socket.emit('request_state_sync', { roomId });
+        };
+
+        // Run once immediately after join (catches state missed during initial join)
+        sync();
+
+        const interval = setInterval(sync, 30_000);
+        return () => clearInterval(interval);
+    }, [socket, isJoined, roomId]);
 
     const sendInput = (action: string) => {
         if (window.navigator.vibrate) {
@@ -95,6 +139,8 @@ function App() {
         switch (currentGame.id) {
             case 'flappy_bird':
                 return <FlappyController onInput={sendInput} gameState={currentGame.state} />;
+            case 'gold_miner':
+                return <GoldMinerController onInput={sendInput} gameState={currentGame.state} />;
             case 'racing_car':
                 return <div style={{ padding: 40 }}>Racing Controller (Coming Soon)</div>;
             default:

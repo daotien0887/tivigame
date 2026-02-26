@@ -1,0 +1,41 @@
+{
+    "tiles": {
+        "size": 48,
+        "cols": 40,
+        "rows": 21
+    },
+    "player": {
+        "digDirtTime": 380,
+        "digStoneTime": 1100,
+        "fallSpeed": 80
+    },
+    "levelTime": 90,
+    "ore": {
+        "gold": {
+            "value": 50,
+            "color": "0xFFD700"
+        },
+        "ruby": {
+            "value": 120,
+            "color": "0xFF2244"
+        },
+        "diamond": {
+            "value": 300,
+            "color": "0x00DFFF"
+        }
+    },
+    "shop": {
+        "pickaxe": {
+            "name": "Nâng cấp Cuốc",
+            "baseCost": 180
+        },
+        "dynamite": {
+            "name": "Thuốc Nổ x2",
+            "cost": 140
+        },
+        "extraTime": {
+            "name": "+30s cho level sau",
+            "cost": 100
+        }
+    }
+}

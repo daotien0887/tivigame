@@ -23,7 +23,7 @@ let globalHighScore = {
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // Host (TV) creates a room
+    // ── Host (TV) creates a room ─────────────────────────────────────────────
     socket.on('create_room', () => {
         const roomId = roomManager.createRoom(socket.id);
         socket.join(roomId);
@@ -31,14 +31,13 @@ io.on('connection', (socket) => {
         console.log(`Room created: ${roomId} by host ${socket.id}`);
     });
 
-    // Controller (Mobile) joins a room
+    // ── Controller (Mobile) joins a room ─────────────────────────────────────
     socket.on('join_room', (data) => {
         const { roomId, profile } = data;
         const controller = roomManager.joinRoom(roomId, socket.id);
 
         if (controller) {
             socket.join(roomId);
-            // Get room info to send current game state
             const room = roomManager.rooms.get(roomId);
             socket.emit('joined_room', {
                 roomId,
@@ -49,7 +48,6 @@ io.on('connection', (socket) => {
                 }
             });
 
-            // Notify host and other controllers
             io.to(room.hostId).emit('controller_connected', {
                 controllerId: socket.id,
                 profile: profile,
@@ -63,7 +61,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Relay actions from Controller to Host
+    // ── Relay input: Controller → Host TV ────────────────────────────────────
     socket.on('game_input', (data) => {
         const room = roomManager.getRoomByController(socket.id);
         if (room) {
@@ -74,14 +72,31 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Relay actions from Host to all Controllers
-    socket.on('update_game_state', (data) => {
-        console.log(`[update_game_state] received from ${socket.id}:`, data);
+    // ── State sync heartbeat: Controller requests current state from server ──
+    // Mobile calls this every 30s. Server responds directly with stored room
+    // state — no TV involvement needed. Handles re-sync after reconnect.
+    socket.on('request_state_sync', ({ roomId }) => {
+        const room = roomManager.rooms.get(roomId);
+        if (!room) {
+            console.warn(`[state_sync] Room ${roomId} not found for ${socket.id}`);
+            return;
+        }
+        console.log(`[state_sync] → ${socket.id}: ${room.currentGameId}/${room.gameState}`);
+        socket.emit('game_state_changed', {
+            roomId,
+            gameId: room.currentGameId,
+            gameState: room.gameState,
+        });
+    });
 
-        // Primary: use roomId from data
+    // ── Relay state update: Host TV → all Controllers ────────────────────────
+    socket.on('update_game_state', (data) => {
+        console.log(`[update_game_state] from ${socket.id}:`, data);
+
+        // Primary: look up by roomId in payload
         let room = data.roomId ? roomManager.rooms.get(data.roomId) : null;
 
-        // Fallback: look up room by this socket's host status
+        // Fallback: find room by this socket being the host
         if (!room) {
             const found = roomManager.getRoomByHost(socket.id);
             if (found) {
@@ -93,11 +108,10 @@ io.on('connection', (socket) => {
 
         if (room && room.hostId === socket.id) {
             roomManager.updateGameState(data.roomId, data.gameId, data.gameState);
-            // Broadcast to all controllers in the room (not the host)
             socket.to(data.roomId).emit('game_state_changed', data);
-            console.log(`[update_game_state] broadcasted game_state_changed to room ${data.roomId}:`, data.gameState);
+            console.log(`[update_game_state] broadcasted to room ${data.roomId}: ${data.gameState}`);
         } else {
-            console.warn(`[update_game_state] FAILED - no room or not authorized`, {
+            console.warn(`[update_game_state] FAILED`, {
                 roomId: data.roomId,
                 socketId: socket.id,
                 hasRoom: !!room,
@@ -106,13 +120,10 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Handle Main Controller Promotion/Transfer
+    // ── Main Controller promotion ─────────────────────────────────────────────
     socket.on('assign_main_controller', (data) => {
         const { roomId, targetId } = data;
         const room = roomManager.rooms.get(roomId);
-
-        // Only host or current main could technically trigger this, 
-        // but for MVP let's trust the signal or valid host
         if (room && room.hostId === socket.id) {
             if (roomManager.setMainController(roomId, targetId)) {
                 io.to(roomId).emit('main_controller_changed', targetId);
@@ -120,7 +131,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // High Score logic
+    // ── High Score ────────────────────────────────────────────────────────────
     socket.on('get_highscore', () => {
         socket.emit('highscore_data', globalHighScore);
     });
@@ -136,6 +147,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ── Disconnect ────────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
         const result = roomManager.leaveRoom(socket.id);
         if (result) {
@@ -146,7 +158,6 @@ io.on('connection', (socket) => {
                     controllerId: result.controllerId,
                     newMainId: result.newMainId
                 });
-
                 if (result.newMainId) {
                     io.to(result.newMainId).emit('promoted_to_main');
                 }
