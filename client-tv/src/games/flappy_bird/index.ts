@@ -348,16 +348,15 @@ class GameOverScene extends Phaser.Scene {
 // ─── FlappyBird Controller ─────────────────────────────────────────────────────
 
 export class FlappyBird extends GameBase {
+    readonly gameId = 'flappy_bird';
+
     private game: Phaser.Game | null = null;
     private gameScene: GameScene | null = null;
     private localBest = 0;
     // 3 states: playing → dying (animation) → gameover (ready for input)
     private state: 'playing' | 'dying' | 'gameover' = 'playing';
-    private roomId = ''; // cached on init to avoid window timing issues
 
     init() {
-        // Cache roomId once at startup — window.roomId is always set by main.ts at this point
-        this.roomId = (window as any).roomId || '';
         console.log('[FlappyBird] init, roomId =', this.roomId);
 
         const saved = localStorage.getItem('flappy_best');
@@ -429,15 +428,9 @@ export class FlappyBird extends GameBase {
             this.game.scene.start('GameOverScene');
 
             // GameOverScene started — now TV is actually on scoreboard
-            // Transition to final 'gameover' and notify mobile
             this.state = 'gameover';
-            console.log('[FlappyBird] emitting game_over, roomId =', this.roomId);
-            this.socket.emit('update_game_state', {
-                roomId: this.roomId,
-                gameId: 'flappy_bird',
-                gameState: 'game_over',
-                score
-            });
+            console.log('[FlappyBird] game_over, score =', score);
+            this.emitState('game_over', { score });
         }, 800);
     }
 
@@ -454,12 +447,7 @@ export class FlappyBird extends GameBase {
         } else if (action === 'REPLAY') {
             // Only process when fully ready in gameover state (not while dying)
             if (this.state === 'gameover') {
-                console.log('[FlappyBird] emitting replay/playing, roomId =', this.roomId);
-                this.socket.emit('update_game_state', {
-                    roomId: this.roomId,
-                    gameId: 'flappy_bird',
-                    gameState: 'playing'
-                });
+                this.emitState('playing');
                 this._startRound();
             }
             // Silently ignore REPLAY while still 'dying' — prevents race condition

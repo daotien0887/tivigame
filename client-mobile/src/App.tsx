@@ -1,73 +1,79 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSocket } from './hooks/useSocket';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Power } from 'lucide-react';
-import { HubController } from './controllers/HubController';
-import { FlappyController } from './controllers/FlappyController';
-import { GoldMinerController } from './controllers/GoldMinerController';
+import { useSocket } from './hooks/useSocket';
+import { SOCKET_EVENTS } from './constants/socketEvents';
+import { resolveController } from './controllers';
+import type { AppState, GameState, ControllerInfo, StateChangePayload } from './types/state';
 
-console.log('Controllers loading:', { HubController, FlappyController });
-
+// ── App ───────────────────────────────────────────────────────────────────────
 function App() {
-    const { socket, connected, sendMessage } = useSocket();
+    const { socket, connected, transport, sendMessage } = useSocket();
+
+    // ── State ─────────────────────────────────────────────────────────────────
     const [roomId, setRoomId] = useState('');
     const [isJoined, setIsJoined] = useState(false);
-    const [controllerInfo, setControllerInfo] = useState<any>(null);
+    const [controllerInfo, setControllerInfo] = useState<ControllerInfo | null>(null);
     const [isWebview, setIsWebview] = useState(false);
-    const [currentGame, setCurrentGame] = useState({ id: 'hub', state: 'idle' });
 
-    // Ref to always have the latest roomId inside socket callbacks (avoids stale closure)
+    // Two-layer state machine — driven entirely by server broadcasts
+    const [appState, setAppState] = useState<AppState>('connecting');
+    const [gameId, setGameId] = useState<string>('hub');
+    const [gameState, setGameState] = useState<GameState>('idle');
+
+    // Stable refs for use inside socket callbacks (avoid stale closure)
     const roomIdRef = useRef('');
-    useEffect(() => { roomIdRef.current = roomId; }, [roomId]);
-
     const isJoinedRef = useRef(false);
+    useEffect(() => { roomIdRef.current = roomId; }, [roomId]);
     useEffect(() => { isJoinedRef.current = isJoined; }, [isJoined]);
 
-    // 1. Initial Checks
+    // ── Initial checks ────────────────────────────────────────────────────────
     useEffect(() => {
+        // Detect in-app browser (Facebook, Zalo) — advise using real browser
         const ua = navigator.userAgent || '';
-        const isIAB = ua.includes('FBAN') || ua.includes('FBAV') || ua.includes('Zalo') || ua.includes('Messenger');
+        const isIAB = /FBAN|FBAV|Zalo|Messenger/i.test(ua);
         setIsWebview(isIAB);
 
-        // Auto-fill roomId from URL or LocalStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomFromUrl = urlParams.get('room');
-        const roomFromStorage = localStorage.getItem('lastRoomId');
-
-        if (roomFromUrl) {
-            setRoomId(roomFromUrl);
-        } else if (roomFromStorage) {
-            setRoomId(roomFromStorage);
-        }
+        // Pre-fill room from URL or last session
+        const urlRoom = new URLSearchParams(window.location.search).get('room');
+        const storedRoom = localStorage.getItem('lastRoomId');
+        if (urlRoom) setRoomId(urlRoom);
+        else if (storedRoom) setRoomId(storedRoom);
     }, []);
 
-    const handleJoin = () => {
-        if (socket && roomId) {
-            console.log('Emitting join_room:', roomId);
-            sendMessage('join_room', {
-                roomId,
-                profile: { name: 'Player', color: 'blue' }
+    // ── Auto-join when socket connects and we have a room from URL ────────────
+    useEffect(() => {
+        if (!socket || !connected) return;
+        const urlRoom = new URLSearchParams(window.location.search).get('room');
+        if (urlRoom && !isJoinedRef.current) {
+            console.log('[App] Auto-joining room from URL:', urlRoom);
+            socket.emit(SOCKET_EVENTS.JOIN_ROOM, {
+                roomId: urlRoom,
+                profile: { name: 'Player', color: 'blue' },
             });
-            localStorage.setItem('lastRoomId', roomId);
+            setRoomId(urlRoom);
+            localStorage.setItem('lastRoomId', urlRoom);
         }
-    };
+    }, [socket, connected]);
 
-    // 2. Socket Listeners
+    // ── Socket listeners ──────────────────────────────────────────────────────
     useEffect(() => {
         if (!socket) return;
 
-        const onJoined = (data: any) => {
-            console.log('Joined room event received:', data);
+        const onJoined = (data: { controllerInfo: ControllerInfo; roomState: any }) => {
             setIsJoined(true);
             setControllerInfo(data.controllerInfo);
-            if (data.gameState) {
-                console.log('Syncing initial game state:', data.gameState);
-                setCurrentGame({ id: data.gameState.gameId, state: data.gameState.gameState });
+            const rs = data.roomState;
+            if (rs) {
+                setAppState(rs.appState ?? 'hub_ready');
+                setGameId(rs.currentGameId ?? 'hub');
+                setGameState(rs.gameState ?? 'idle');
             }
         };
 
-        const onGameStateChanged = (data: any) => {
-            console.log('Game state changed event received:', data);
-            setCurrentGame({ id: data.gameId, state: data.gameState });
+        const onStateChanged = (data: StateChangePayload) => {
+            setAppState(data.appState);
+            setGameId(data.currentGameId);
+            setGameState(data.gameState);
         };
 
         const onError = (msg: string) => alert(msg);
@@ -78,82 +84,76 @@ function App() {
             window.location.reload();
         };
 
-        // On reconnect: auto-rejoin room so socket is back in the room and
-        // receives future broadcasts. Server will respond with joined_room + current state.
+        // Reconnect: auto-rejoin so socket is back in the room
         const onConnect = () => {
             const rid = roomIdRef.current;
             if (rid && isJoinedRef.current) {
-                console.log('[socket] reconnected — auto-rejoining room', rid);
-                socket.emit('join_room', { roomId: rid, profile: { name: 'Player', color: 'blue' } });
+                console.log('[Socket] Reconnected → rejoining room', rid);
+                socket.emit(SOCKET_EVENTS.JOIN_ROOM, {
+                    roomId: rid,
+                    profile: { name: 'Player', color: 'blue' },
+                });
             }
         };
 
         const onDisconnect = (reason: string) => {
-            console.log('[socket] disconnected:', reason);
-            // Keep isJoined=true so UI doesn't flash to connect screen during brief drops
+            console.log('[Socket] Disconnected:', reason);
+            // Keep isJoined=true so UI doesn't flash during brief drops
         };
 
-        socket.on('joined_room', onJoined);
-        socket.on('game_state_changed', onGameStateChanged);
-        socket.on('error_message', onError);
-        socket.on('host_disconnected', onHostDown);
+        socket.on(SOCKET_EVENTS.JOINED_ROOM, onJoined);
+        socket.on(SOCKET_EVENTS.APP_STATE_CHANGED, onStateChanged);
+        socket.on(SOCKET_EVENTS.ERROR_MESSAGE, onError);
+        socket.on(SOCKET_EVENTS.HOST_DISCONNECTED, onHostDown);
         socket.on('connect', onConnect);
         socket.on('disconnect', onDisconnect);
 
         return () => {
-            socket.off('joined_room', onJoined);
-            socket.off('game_state_changed', onGameStateChanged);
-            socket.off('error_message', onError);
-            socket.off('host_disconnected', onHostDown);
+            socket.off(SOCKET_EVENTS.JOINED_ROOM, onJoined);
+            socket.off(SOCKET_EVENTS.APP_STATE_CHANGED, onStateChanged);
+            socket.off(SOCKET_EVENTS.ERROR_MESSAGE, onError);
+            socket.off(SOCKET_EVENTS.HOST_DISCONNECTED, onHostDown);
             socket.off('connect', onConnect);
             socket.off('disconnect', onDisconnect);
         };
     }, [socket]);
 
-    // 3. State-sync heartbeat: every 30s ask server for current TV state.
-    //    Handles de-sync after reconnect or network hiccups — no TV changes needed.
+    // ── State-sync heartbeat: every 30s in case a broadcast was missed ────────
     useEffect(() => {
         if (!socket || !isJoined || !roomId) return;
-
         const sync = () => {
-            console.log('[state_sync] requesting state for room', roomId);
-            socket.emit('request_state_sync', { roomId });
+            socket.emit(SOCKET_EVENTS.REQUEST_STATE_SYNC, { roomId });
         };
-
-        // Run once immediately after join (catches state missed during initial join)
-        sync();
-
-        const interval = setInterval(sync, 30_000);
-        return () => clearInterval(interval);
+        sync(); // immediate sync on join
+        const id = setInterval(sync, 30_000);
+        return () => clearInterval(id);
     }, [socket, isJoined, roomId]);
 
-    const sendInput = (action: string) => {
-        if (window.navigator.vibrate) {
-            window.navigator.vibrate(50);
-        }
-        sendMessage('game_input', { action, roomId });
+    // ── Manual join ───────────────────────────────────────────────────────────
+    const handleJoin = () => {
+        if (!socket || !roomId.trim()) return;
+        sendMessage(SOCKET_EVENTS.JOIN_ROOM, {
+            roomId: roomId.trim(),
+            profile: { name: 'Player', color: 'blue' },
+        });
+        localStorage.setItem('lastRoomId', roomId.trim());
     };
 
-    const renderController = () => {
-        console.log('Rendering controller for game:', currentGame.id);
-        switch (currentGame.id) {
-            case 'flappy_bird':
-                return <FlappyController onInput={sendInput} gameState={currentGame.state} />;
-            case 'gold_miner':
-                return <GoldMinerController onInput={sendInput} gameState={currentGame.state} />;
-            case 'racing_car':
-                return <div style={{ padding: 40 }}>Racing Controller (Coming Soon)</div>;
-            default:
-                // Default to HUB
-                return <HubController onInput={sendInput} />;
-        }
-    };
+    // ── Send game input with haptic feedback ──────────────────────────────────
+    const sendInput = useCallback((action: string) => {
+        if (navigator.vibrate) navigator.vibrate(50);
+        sendMessage(SOCKET_EVENTS.GAME_INPUT, { action, roomId });
+    }, [sendMessage, roomId]);
 
+    // ── Controller component resolved declaratively from registry ─────────────
+    const Controller = resolveController(appState, gameId);
+
+    // ── Guards ────────────────────────────────────────────────────────────────
     if (isWebview) {
         return (
             <div className="webview-warning">
                 <h1>Cảnh báo trình duyệt</h1>
-                <p>Giao diện tay cầm cần Safari / Chrome.</p>
+                <p>Giao diện tay cầm cần Safari / Chrome. Vui lòng mở link trong trình duyệt hệ thống.</p>
             </div>
         );
     }
@@ -161,46 +161,80 @@ function App() {
     if (!isJoined) {
         return (
             <div className="connect-screen">
-                <h1>TiviGame Hub</h1>
+                <h1>TiviGame</h1>
+                <p className="connect-subtitle">Nhập mã PIN trên TV để kết nối</p>
                 <div className="input-group">
                     <input
+                        id="pin-input"
                         type="text"
-                        placeholder="Mã PIN"
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="PIN (4 chữ số)"
                         value={roomId}
                         onChange={(e) => setRoomId(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
                     />
-                    <button onClick={handleJoin} disabled={!connected}>
-                        {connected ? 'Kết nối ngay' : 'Đang kết nối server...'}
+                    <button id="join-btn" onClick={handleJoin} disabled={!connected || !roomId.trim()}>
+                        {connected ? 'Kết nối ngay' : 'Đang kết nối...'}
                     </button>
                 </div>
+                {transport && (
+                    <p className="transport-hint">
+                        {transport === 'lan' ? '⚡ LAN' : '🌐 Internet'}
+                    </p>
+                )}
             </div>
         );
     }
 
     return (
         <div className="controller-screen">
-            <header>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {currentGame.id !== 'hub' && (
-                        <button className="icon-btn" onClick={() => sendInput('BACK')}>
+            <header className="controller-header">
+                <div className="header-left">
+                    {appState === 'in_game' && (
+                        <button
+                            id="back-btn"
+                            className="icon-btn"
+                            onClick={() => sendInput('BACK')}
+                            title="Back to Hub"
+                        >
                             <Power size={20} style={{ transform: 'rotate(90deg)', color: '#ff4444' }} />
                         </button>
                     )}
                     <span className="player-badge">
-                        P{controllerInfo?.playerIndex} {controllerInfo?.isMain && '★'}
+                        P{controllerInfo?.playerIndex}
+                        {controllerInfo?.isMain && ' ★'}
                     </span>
                 </div>
-                <span className="game-id-badge">{currentGame.id.toUpperCase()}</span>
-                <button className="disconnect-btn" onClick={() => {
-                    localStorage.removeItem('lastRoomId');
-                    window.location.reload();
-                }}>
+
+                <div className="header-center">
+                    <span className="game-id-badge">{gameId.replace('_', ' ').toUpperCase()}</span>
+                    {transport && (
+                        <span className="transport-badge" title="Connection type">
+                            {transport === 'lan' ? '⚡' : '🌐'}
+                        </span>
+                    )}
+                </div>
+
+                <button
+                    id="disconnect-btn"
+                    className="icon-btn disconnect-btn"
+                    title="Disconnect"
+                    onClick={() => {
+                        localStorage.removeItem('lastRoomId');
+                        window.location.reload();
+                    }}
+                >
                     <Power size={20} />
                 </button>
             </header>
 
             <main className="controller-main">
-                {renderController()}
+                <Controller
+                    onInput={sendInput}
+                    gameState={gameState}
+                    isMain={controllerInfo?.isMain ?? false}
+                />
             </main>
         </div>
     );

@@ -33,6 +33,26 @@ echo -e "  Press ${RED}Ctrl+C${RESET} to stop all services"
 echo -e "  ──────────────────────────────────────────"
 echo ""
 
+# Helper to kill process by port
+kill_port() {
+    local port=$1
+    echo -e "${CYAN}[system]${RESET}  Checking port $port..."
+    lsof -t -i:$port | while read -r pid; do
+        if [ ! -z "$pid" ]; then
+            echo -e "${YELLOW}[system]${RESET}  Killing PID: $pid on port $port"
+            kill -9 $pid 2>/dev/null
+        fi
+    done
+}
+
+# Pre-flight: Clean up existing processes on our target ports
+echo -e "${CYAN}[system]${RESET}  Cleaning up ports..."
+kill_port 3001
+kill_port 5173
+kill_port 5174
+echo ""
+echo ""
+
 # Cleanup: kill all child processes when script exits
 cleanup() {
     echo ""

@@ -570,14 +570,14 @@ class GOScene extends Phaser.Scene {
 // GoldMiner — GameBase controller
 // ═══════════════════════════════════════════════════════════════════════════════
 export class GoldMiner extends GameBase {
+    readonly gameId = 'gold_miner';
+
     private game: Phaser.Game | null = null;
-    private roomId = '';
     private state: 'idle' | 'mining' | 'shop' | 'gameover' = 'idle';
     private level = 1;
     private playerState: PlayerState = { pickaxeLevel: 1, dynamite: 0, bonusTime: 0, totalGold: 0 };
 
     init() {
-        this.roomId = (window as any).roomId || '';
         this.level = 1;
         this.playerState = { pickaxeLevel: 1, dynamite: 0, bonusTime: 0, totalGold: 0 };
 
@@ -612,23 +612,14 @@ export class GoldMiner extends GameBase {
             sc.onLevelComplete = (gold: number) => this._enterShop(gold);
         });
 
-        this.socket.emit('update_game_state', {
-            roomId: this.roomId,
-            gameId: 'gold_miner',
-            gameState: 'mining',
-        });
+        this.emitState('mining');
     }
 
     private _enterShop(goldEarned: number) {
         if (!this.game) return;
         this.state = 'shop';
 
-        this.socket.emit('update_game_state', {
-            roomId: this.roomId,
-            gameId: 'gold_miner',
-            gameState: 'shop',
-            extraData: { gold: goldEarned, pickaxeLevel: this.playerState.pickaxeLevel }
-        });
+        this.emitState('shop', { gold: goldEarned, pickaxeLevel: this.playerState.pickaxeLevel });
 
         setTimeout(() => {
             if (!this.game) return;
@@ -651,12 +642,7 @@ export class GoldMiner extends GameBase {
         if (!this.game) return;
         this.state = 'gameover';
 
-        this.socket.emit('update_game_state', {
-            roomId: this.roomId,
-            gameId: 'gold_miner',
-            gameState: 'game_over',
-            score: this.playerState.totalGold,
-        });
+        this.emitState('game_over', { score: this.playerState.totalGold });
 
         this.game.scene.start('GOScene');
         this.game.scene.getScene('GOScene').events.once('create', () => {
@@ -697,9 +683,7 @@ export class GoldMiner extends GameBase {
             if (action === 'REPLAY') {
                 this.level = 1;
                 this.playerState = { pickaxeLevel: 1, dynamite: 0, bonusTime: 0, totalGold: 0 };
-                this.socket.emit('update_game_state', {
-                    roomId: this.roomId, gameId: 'gold_miner', gameState: 'mining'
-                });
+                this.emitState('mining');
                 this.game!.scene.stop('GOScene');
                 this._startMining();
             } else if (action === 'BACK') {
