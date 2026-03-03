@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Power } from 'lucide-react';
+import { Power, Menu, X, Share2, LogOut, Square, Pause } from 'lucide-react';
 import { useSocket } from './hooks/useSocket';
 import { SOCKET_EVENTS } from './constants/socketEvents';
 import { resolveController } from './controllers';
@@ -19,6 +19,7 @@ function App() {
     const [appState, setAppState] = useState<AppState>('connecting');
     const [gameId, setGameId] = useState<string>('hub');
     const [gameState, setGameState] = useState<GameState>('idle');
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Stable refs for use inside socket callbacks (avoid stale closure)
     const roomIdRef = useRef('');
@@ -217,17 +218,51 @@ function App() {
                 </div>
 
                 <button
-                    id="disconnect-btn"
-                    className="icon-btn disconnect-btn"
-                    title="Disconnect"
-                    onClick={() => {
-                        localStorage.removeItem('lastRoomId');
-                        window.location.reload();
-                    }}
+                    id="menu-toggle-btn"
+                    className="icon-btn"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    title="Menu"
                 >
-                    <Power size={20} />
+                    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
             </header>
+
+            {isJoined && isMenuOpen && (
+                <div className="menu-overlay" onClick={() => setIsMenuOpen(false)}>
+                    <div className="menu-content" onClick={e => e.stopPropagation()}>
+                        <div className="menu-header">
+                            <h3>Menu</h3>
+                            <button onClick={() => setIsMenuOpen(false)}><X size={20} /></button>
+                        </div>
+                        <div className="menu-list">
+                            {controllerInfo?.isMain && appState === 'in_game' && (
+                                <>
+                                    <button className="menu-item" onClick={() => { sendInput('PAUSE'); setIsMenuOpen(false); }}>
+                                        <Pause size={20} /> Pause Game
+                                    </button>
+                                    <button className="menu-item danger" onClick={() => { sendInput('BACK'); setIsMenuOpen(false); }}>
+                                        <Square size={20} /> Quit Game
+                                    </button>
+                                </>
+                            )}
+                            <button className="menu-item" onClick={() => {
+                                alert(`Share this link to connect more controllers:\n${window.location.origin}/?room=${roomId}${transport === 'lan' ? `&lan=${new URLSearchParams(window.location.search).get('lan')}` : ''}`);
+                                setIsMenuOpen(false);
+                            }}>
+                                <Share2 size={20} /> Connect more controller
+                            </button>
+                            <button className="menu-item danger" onClick={() => {
+                                if (confirm('Disconnect from room?')) {
+                                    localStorage.removeItem('lastRoomId');
+                                    window.location.reload();
+                                }
+                            }}>
+                                <LogOut size={20} /> Disconnect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <main className="controller-main">
                 <Controller
