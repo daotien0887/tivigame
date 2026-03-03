@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SERVER_URL = 'https://api.tivigame.com';
+const SERVER_URL = import.meta.env.VITE_SERVER_URL as string;
+
 
 export const useSocket = () => {
     const [socket, setSocket] = useState<Socket | null>(null);

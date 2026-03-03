@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "dev": "NODE_ENV=development node -r dotenv/config src/index.js dotenv_config_path=.env.development",
+    "start": "NODE_ENV=production node -r dotenv/config src/index.js dotenv_config_path=.env.production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,6 +13,7 @@
   "description": "",
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.3"

@@ -5,7 +5,8 @@ import { GameBase } from './games/GameBase';
 import { FlappyBird } from './games/flappy_bird';
 import { GoldMiner } from './games/gold_miner';
 
-const SERVER_URL = 'https://api.tivigame.com';
+const SERVER_URL = import.meta.env.VITE_SERVER_URL as string;
+const MOBILE_URL = import.meta.env.VITE_MOBILE_URL as string;
 const socket = io(SERVER_URL);
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -41,7 +42,7 @@ function updateRoomInfo(roomId: string) {
 
     const qrCanvas = document.querySelector('#qrcode') as HTMLCanvasElement;
     // URL sẽ trỏ đến trang mobile controller kèm roomId trên port 5174
-    const controllerUrl = `https://m.tivigame.com/?room=${roomId}`;
+    const controllerUrl = `${MOBILE_URL}/?room=${roomId}`;
     QRCode.toCanvas(qrCanvas, controllerUrl, { width: 256 }, (error) => {
         if (error) console.error(error);
     });

@@ -1,4 +1,11 @@
 node_modules/
 dist/
-.env
 .DS_Store
+
+# Environment files (real values - never commit these)
+.env
+.env.local
+.env.staging
+
+# Keep example files in git
+!.env.example

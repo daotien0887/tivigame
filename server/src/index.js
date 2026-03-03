@@ -4,14 +4,24 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const roomManager = require('./roomManager');
 
+// ── Environment ────────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+    : '*';
+
+console.log(`[Server] Starting in ${NODE_ENV} mode`);
+console.log(`[Server] Allowed origins:`, corsOrigins);
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: corsOrigins }));
 
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: corsOrigins,
+        methods: ['GET', 'POST']
     }
 });
 
@@ -167,7 +177,6 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`[Server] ONLINE on port ${PORT} — ${NODE_ENV} mode`);
 });
