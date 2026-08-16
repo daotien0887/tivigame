@@ -85,7 +85,9 @@ class RoomManager {
         if (!room) return null;
 
         const isMain = room.controllers.length === 0;
-        const playerIndex = room.controllers.length + 1;
+        const usedIndexes = new Set(room.controllers.map(c => c.playerIndex));
+        let playerIndex = 1;
+        while (usedIndexes.has(playerIndex)) playerIndex += 1;
         const controller = { socketId, isMain, playerIndex, profile };
 
         room.controllers.push(controller);

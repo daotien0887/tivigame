@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GameBase } from '../GameBase';
+import type { GameInputEvent, GameDescriptor } from '../types';
 import birdAsset from './assets/bird.png';
 import bgAsset from './assets/bg.png';
 import cfg from './config.json';
@@ -350,6 +351,14 @@ class GameOverScene extends Phaser.Scene {
 export class FlappyBird extends GameBase {
     readonly gameId = 'flappy_bird';
 
+    readonly descriptor: GameDescriptor = {
+        gameId: 'flappy_bird',
+        title: 'Flappy Bird',
+        icon: '🐦',
+        minPlayers: 1,
+        maxPlayers: 1,   // single-player game
+    };
+
     private game: Phaser.Game | null = null;
     private gameScene: GameScene | null = null;
     private localBest = 0;
@@ -434,26 +443,36 @@ export class FlappyBird extends GameBase {
         }, 800);
     }
 
-    handleInput(data: any) {
-        const { action } = data;
+    protected onInput(event: GameInputEvent) {
+        const { action } = event;
 
         if (action === 'JUMP') {
-            // Only flap when actively playing and scene is ready
             if (this.state === 'playing' && this.gameScene) {
                 this.gameScene.flap();
             }
-            // Silently ignore JUMP while 'dying' or 'gameover'
-
         } else if (action === 'REPLAY') {
-            // Only process when fully ready in gameover state (not while dying)
             if (this.state === 'gameover') {
-                this.emitState('playing');
                 this._startRound();
             }
-            // Silently ignore REPLAY while still 'dying' — prevents race condition
+        }
+    }
 
-        } else if (action === 'BACK') {
-            this.onExit();
+    public togglePause() {
+        if (!this.game || this.state === 'gameover' || this.state === 'dying') return;
+
+        const scene = this.game.scene.getScene('GameScene');
+        if (!scene) return;
+
+        if (this.state === 'playing') {
+            this.state = 'paused' as any;
+            scene.physics.pause();
+            scene.time.paused = true;
+            this.emitState('paused');
+        } else if ((this.state as any) === 'paused') {
+            this.state = 'playing';
+            scene.physics.resume();
+            scene.time.paused = false;
+            this.emitState('playing');
         }
     }
 

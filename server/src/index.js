@@ -87,9 +87,16 @@ io.on('connection', (socket) => {
     // ── Mobile: relay game input to TV ────────────────────────────────────────
     socket.on(SOCKET_EVENTS.GAME_INPUT, (data) => {
         const room = roomManager.getRoomByController(socket.id);
-        if (!room) return;
+        if (!room || typeof data?.action !== 'string' || data.action.length > 40) return;
+        const inputState = data.state === 'released' ? 'released' : 'pressed';
+        const inputValue = Number.isFinite(data.value)
+            ? Math.max(-1, Math.min(1, data.value))
+            : 1;
         io.to(room.hostId).emit(SOCKET_EVENTS.GAME_INPUT, {
-            ...data,
+            action: data.action,
+            state: inputState,
+            value: inputValue,
+            roomId: room.roomId,
             controllerId: socket.id,
         });
     });

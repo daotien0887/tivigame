@@ -9,7 +9,13 @@ export type GameState =
     | 'paused'
     | 'game_over'
     | 'shop'       // Gold Miner: between-round shop
-    | 'mining';    // Gold Miner: active digging phase
+    | 'mining'     // Gold Miner: active digging phase
+    | 'mode_select'
+    | 'map_select'
+    | 'car_select'
+    | 'lobby'
+    | 'racing'
+    | 'race_results';
 
 export interface ControllerProfile {
     name: string;
@@ -49,4 +55,6 @@ export interface GameInputPayload {
     action: string;
     roomId: string;
     controllerId: string; // added by server
+    state?: 'pressed' | 'released';
+    value?: number;
 }

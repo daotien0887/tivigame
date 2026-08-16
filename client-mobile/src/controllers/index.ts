@@ -3,14 +3,18 @@ import type { AppState, GameState } from '../types/state';
 import { HubController } from './HubController';
 import { FlappyController } from './FlappyController';
 import { GoldMinerController } from './GoldMinerController';
+import { RacingController } from './RacingController';
 
 // ── Controller Props contract ─────────────────────────────────────────────────
 // All controller components must accept this interface.
 // isMain controls whether full navigation is available.
 export interface ControllerProps {
-    onInput: (action: string) => void;
+    onInput: (action: string, state?: 'pressed' | 'released', value?: number) => void;
     gameState: GameState;
     isMain: boolean;
+    controllerId: string;
+    playerIndex: number;
+    extraData: Record<string, unknown>;
 }
 
 type ControllerComponent = React.FC<ControllerProps>;
@@ -22,7 +26,7 @@ type ControllerComponent = React.FC<ControllerProps>;
 const GAME_REGISTRY: Record<string, ControllerComponent> = {
     flappy_bird: FlappyController as ControllerComponent,
     gold_miner: GoldMinerController as ControllerComponent,
-    // racing_car:  RacingController,
+    racing_car: RacingController,
     // soccer:      SoccerController,
 };
 

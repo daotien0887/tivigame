@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GameBase } from '../GameBase';
+import type { GameInputEvent, GameDescriptor } from '../types';
 import cfg from './config.json';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -572,6 +573,14 @@ class GOScene extends Phaser.Scene {
 export class GoldMiner extends GameBase {
     readonly gameId = 'gold_miner';
 
+    readonly descriptor: GameDescriptor = {
+        gameId: 'gold_miner',
+        title: 'Gold Miner',
+        icon: '⛏️',
+        minPlayers: 1,
+        maxPlayers: 4,
+    };
+
     private game: Phaser.Game | null = null;
     private state: 'idle' | 'mining' | 'shop' | 'gameover' = 'idle';
     private level = 1;
@@ -658,8 +667,8 @@ export class GoldMiner extends GameBase {
         });
     }
 
-    handleInput(data: any) {
-        const { action } = data;
+    protected onInput(event: GameInputEvent) {
+        const { action } = event;
 
         if (this.state === 'mining') {
             const sc = this.game?.scene.getScene('MiningScene') as MiningScene | null;
@@ -669,26 +678,40 @@ export class GoldMiner extends GameBase {
             else if (action === 'LEFT') sc.move('LEFT');
             else if (action === 'RIGHT') sc.move('RIGHT');
             else if (action === 'DYNAMITE') sc.useDynamite();
-            else if (action === 'BACK') this._enterShop(0);
+            // Local BACK in mining goes to shop (override default quit if needed,
+            // but here we let GameBase handle global BACK=Quit.
+            // If we want SHOP to be the behavior, we'd handle it here and return.
+            else if (action === 'SHOP') this._enterShop(0);
 
         } else if (this.state === 'shop') {
             const sc = this.game?.scene.getScene('ShopScene') as ShopScene | null;
-            if (!sc) return;
+            if (!sc || !sc.scene.isActive()) return;
             if (action === 'UP') sc.navigate(-1);
             else if (action === 'DOWN') sc.navigate(1);
             else if (action === 'BUY') sc.buy();
-            else if (action === 'START' || action === 'BACK') sc.proceed();
+            else if (action === 'START') sc.proceed();
 
         } else if (this.state === 'gameover') {
             if (action === 'REPLAY') {
                 this.level = 1;
                 this.playerState = { pickaxeLevel: 1, dynamite: 0, bonusTime: 0, totalGold: 0 };
-                this.emitState('mining');
-                this.game!.scene.stop('GOScene');
                 this._startMining();
-            } else if (action === 'BACK') {
-                this.onExit();
             }
+        }
+    }
+
+    public togglePause() {
+        if (!this.game || this.state !== 'mining') return;
+
+        const sc = this.game.scene.getScene('MiningScene');
+        if (!sc) return;
+
+        if (sc.scene.isPaused()) {
+            sc.scene.resume();
+            this.emitState('playing');
+        } else {
+            sc.scene.pause();
+            this.emitState('paused');
         }
     }
 

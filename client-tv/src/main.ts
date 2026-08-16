@@ -1,287 +1,166 @@
 import './style.css';
-import QRCode from 'qrcode';
-import { Socket } from 'socket.io-client';
 import { createSocketContext } from './socketManager';
 import { SOCKET_EVENTS } from './constants/socketEvents';
-import { GameBase } from './games/GameBase';
-import { FlappyBird } from './games/flappy_bird';
-import { GoldMiner } from './games/gold_miner';
-import type { AppState, StateChangePayload } from './types/state';
+import { store, TvState } from './core/State';
+import { Renderer } from './core/Renderer';
+import { SocketClient } from './core/SocketClient';
+import { GameManager } from './core/GameManager';
 
-// ── App root ──────────────────────────────────────────────────────────────────
-const app = document.querySelector<HTMLDivElement>('#app')!;
+const renderer = new Renderer('#app');
+let socketClient: SocketClient;
+let gameManager: GameManager;
 
-// ── Application state ─────────────────────────────────────────────────────────
-// All mutable state lives here — no globals scattered across the file.
-const state = {
-    roomId: '',
-    lanIp: '',
-    mobileUrl: '',
-    appState: 'connecting' as AppState,
-    controllers: [] as any[],
-    mainControllerId: '',
-    activeGame: null as GameBase | null,
-};
+// ── Interaction Handlers ──────────────────────────────────────────────────
+function onInput(data: {
+    action: string;
+    controllerId: string;
+    state?: 'pressed' | 'released';
+    value?: number;
+}): void {
+    const state = store.current;
 
-// ── Render: Welcome / waiting screen ─────────────────────────────────────────
-function renderWelcome(): void {
-    app.innerHTML = `
-        <div class="welcome-screen">
-            <h1>TiviGame Hub</h1>
-            <div class="connection-box">
-                <canvas id="qrcode"></canvas>
-                <div class="pin-code">
-                    <span>Mã PIN của bạn:</span>
-                    <strong id="room-pin">----</strong>
-                </div>
-            </div>
-            <p>Sử dụng điện thoại quét mã QR hoặc truy cập <strong id="mobile-url-text">...</strong> và nhập PIN để kết nối.</p>
-            <div id="status-msg">Đang khởi tạo phòng...</div>
-        </div>
-    `;
-}
-
-// ── Render: Hub (game selection) ──────────────────────────────────────────────
-function renderHub(): void {
-    app.innerHTML = `
-        <div class="hub-screen">
-            <header>
-                <h2>TV Game Hub</h2>
-                <div class="room-info">Room: ${state.roomId}</div>
-            </header>
-            <main id="game-list">
-                <div class="game-card focused" data-game="flappy_bird">
-                    <span class="game-icon">🐦</span>
-                    <h3>Flappy Bird</h3>
-                </div>
-                <div class="game-card" data-game="gold_miner">
-                    <span class="game-icon">⛏️</span>
-                    <h3>Gold Miner</h3>
-                </div>
-                <div class="game-card" data-game="racing_car">
-                    <span class="game-icon">🏎️</span>
-                    <h3>Racing Car</h3>
-                </div>
-            </main>
-            <footer>
-                <div id="players-list">
-                    ${state.controllers.map(c =>
-        `<span class="player-tag ${c.isMain ? 'main' : ''}">P${c.playerIndex}</span>`
-    ).join('')}
-                </div>
-            </footer>
-        </div>
-    `;
-}
-
-// ── Update QR code and PIN display ────────────────────────────────────────────
-function updateRoomInfo(roomId: string): void {
-    state.roomId = roomId;
-
-    const pinEl = document.querySelector('#room-pin');
-    if (pinEl) pinEl.textContent = roomId;
-
-    // Dynamically replace localhost with LAN IP if available so QR works on phones
-    let mobileBaseUrl = state.mobileUrl;
-    if (state.lanIp && mobileBaseUrl.includes('localhost')) {
-        mobileBaseUrl = mobileBaseUrl.replace('localhost', state.lanIp);
+    if (state.activeGame) {
+        state.activeGame.handleInput(data);
+        return;
     }
 
-    const urlTextDisplay = document.querySelector('#mobile-url-text');
-    if (urlTextDisplay) {
-        urlTextDisplay.textContent = mobileBaseUrl.replace(/^https?:\/\//, '');
+    if (data.state === 'released') return;
+
+    const controller = state.controllers.find(c => c.controllerId === data.controllerId);
+    if (!controller?.isMain) return;
+
+    if (data.action === 'RIGHT') renderer.moveFocus(1);
+    else if (data.action === 'LEFT') renderer.moveFocus(-1);
+    else if (data.action === 'SELECT') {
+        const focused = document.querySelector<HTMLElement>('.game-card.focused');
+        if (!focused) return;
+        const gameId = focused.dataset.game || 'unknown';
+        launch(gameId);
     }
-
-    const controllerUrl = state.lanIp
-        ? `${mobileBaseUrl}/?room=${roomId}&lan=${state.lanIp}`
-        : `${mobileBaseUrl}/?room=${roomId}`;
-
-    console.log('[QR] Generated URL:', controllerUrl);
-
-    const qrCanvas = document.querySelector('#qrcode') as HTMLCanvasElement | null;
-    if (qrCanvas) {
-        QRCode.toCanvas(qrCanvas, controllerUrl, { width: 256 }, (err) => {
-            if (err) console.error('[QR] Error:', err);
-        });
-    }
-
-    const statusEl = document.querySelector('#status-msg');
-    if (statusEl) statusEl.textContent = 'Đang chờ Main Controller kết nối...';
 }
 
-// ── Emit state helper ─────────────────────────────────────────────────────────
-// The single place where TV sends state updates to the server.
-// Always includes roomId and current appState so mobiles stay in sync.
-function emitState(socket: Socket, partial: Omit<StateChangePayload, 'roomId' | 'appState'>): void {
-    if (!state.roomId) return;
-    const payload: StateChangePayload = {
-        roomId: state.roomId,
-        appState: state.appState,
-        ...partial,
-    };
-    socket.emit(SOCKET_EVENTS.UPDATE_STATE, payload);
-}
+function launch(gameId: string): void {
+    const s = store.current;
+    store.update({ appState: 'in_game' });
 
-// ── Hub navigation ────────────────────────────────────────────────────────────
-function moveFocus(dir: number): void {
-    const cards = Array.from(document.querySelectorAll<HTMLElement>('.game-card'));
-    if (!cards.length) return;
-    const currentIdx = cards.findIndex(c => c.classList.contains('focused'));
-    cards[currentIdx]?.classList.remove('focused');
-    cards[(currentIdx + dir + cards.length) % cards.length]?.classList.add('focused');
-}
+    socketClient.emitState({
+        roomId: s.roomId,
+        appState: 'in_game',
+        currentGameId: gameId,
+        gameState: 'countdown',
+    });
 
-// ── Launch game ───────────────────────────────────────────────────────────────
-function launchGame(socket: Socket): void {
-    const focused = document.querySelector<HTMLElement>('.game-card.focused');
-    if (!focused) return;
-
-    const gameId = focused.dataset.game || 'unknown';
-    console.log(`[Hub] Launching: ${gameId}`);
-
-    state.appState = 'in_game';
-    emitState(socket, { currentGameId: gameId, gameState: 'countdown' });
-
-    app.innerHTML = '<div id="game-container"></div>';
+    renderer.renderInGame();
     const container = document.getElementById('game-container')!;
-
-    const exitFn = () => exitToHub(socket);
-
-    if (gameId === 'flappy_bird') {
-        state.activeGame = new FlappyBird(container, exitFn, socket, state.roomId);
-        state.activeGame.init();
-    } else if (gameId === 'gold_miner') {
-        state.activeGame = new GoldMiner(container, exitFn, socket, state.roomId);
-        state.activeGame.init();
-    } else {
-        container.innerHTML = `
-            <div class="coming-soon">
-                <h1>Game sắp ra mắt!</h1>
-                <p>Chúng tôi đang nỗ lực hoàn thiện...</p>
-                <button id="back-btn">Quay lại Hub</button>
-            </div>
-        `;
-        document.getElementById('back-btn')?.addEventListener('click', exitFn);
-    }
+    const activeGame = gameManager.launch(gameId, container, exitToHub, s.roomId, s.controllers);
+    store.update({ activeGame });
 }
 
-// ── Exit to hub ───────────────────────────────────────────────────────────────
-function exitToHub(socket: Socket): void {
-    console.log('[Hub] Returning to hub');
-    state.activeGame?.destroy();
-    state.activeGame = null;
-    state.appState = 'hub_ready';
-    emitState(socket, { currentGameId: 'hub', gameState: 'idle' });
-    renderHub();
+function exitToHub(): void {
+    const s = store.current;
+    gameManager.destroy();
+    store.update({ activeGame: null, appState: 'hub_ready' });
+    socketClient.emitState({
+        roomId: s.roomId,
+        appState: 'hub_ready',
+        currentGameId: 'hub',
+        gameState: 'idle'
+    });
+    renderer.renderHub(store.current);
 }
 
-// ── Wire socket events ────────────────────────────────────────────────────────
-function bindSocketEvents(socket: Socket): void {
-    // 1. Register all listeners FIRST
-    socket.on('connect_error', (err) => {
-        console.error('[Socket] Connection error:', err);
-        const statusEl = document.querySelector('#status-msg');
-        if (statusEl) statusEl.textContent = `Lỗi kết nối: ${err.message}`;
+// ── Socket Syncing ────────────────────────────────────────────────────────
+function bindEvents(sc: SocketClient): void {
+    sc.on(SOCKET_EVENTS.ROOM_CREATED, (data: { roomId: string; lanIp: string }) => {
+        store.update({ roomId: data.roomId, lanIp: data.lanIp || store.current.lanIp });
+        renderer.updateRoomInfo(store.current);
     });
 
-    socket.on('disconnect', () => {
-        console.log('[Socket] Disconnected');
-        const statusEl = document.querySelector('#status-msg');
-        if (statusEl) statusEl.textContent = 'Mất kết nối server...';
-    });
+    sc.on(SOCKET_EVENTS.CONTROLLER_CONNECTED, (data: any) => {
+        const { controllers } = store.current;
+        const newControllers = [...controllers, data];
+        store.update({ controllers: newControllers });
 
-    socket.on(SOCKET_EVENTS.ROOM_CREATED, (data: { roomId: string; lanIp: string }) => {
-        console.log(`[Room] Created: ${data.roomId} | LAN: ${data.lanIp}`);
-        state.lanIp = data.lanIp || state.lanIp;
-        (window as any).roomId = data.roomId;
-        updateRoomInfo(data.roomId);
-    });
+        // Notify active game that a new player joined
+        gameManager.onPlayerJoin(data);
 
-    socket.on(SOCKET_EVENTS.CONTROLLER_CONNECTED, (data: any) => {
-        state.controllers.push(data);
         if (data.isMain) {
-            state.mainControllerId = data.controllerId;
-            state.appState = 'hub_ready';
-            renderHub();
+            store.update({ mainControllerId: data.controllerId, appState: 'hub_ready' });
+            renderer.renderHub(store.current);
         } else if (document.querySelector('#players-list')) {
-            const list = document.querySelector('#players-list')!;
-            list.innerHTML += `<span class="player-tag">P${data.playerIndex}</span>`;
+            renderer.renderHub(store.current);
         }
-        console.log(`[Room] Controller P${data.playerIndex} joined (main=${data.isMain})`);
     });
 
-    socket.on(SOCKET_EVENTS.CONTROLLER_DISCONNECTED, (data: any) => {
-        state.controllers = state.controllers.filter(c => c.controllerId !== data.controllerId);
+    sc.on(SOCKET_EVENTS.CONTROLLER_DISCONNECTED, (data: any) => {
+        let { controllers, mainControllerId } = store.current;
+        controllers = controllers.filter(c => c.controllerId !== data.controllerId);
+
+        // Notify active game that this player left
+        gameManager.onPlayerLeave(data.controllerId);
+
         if (data.newMainId) {
-            state.mainControllerId = data.newMainId;
-            state.controllers.forEach(c => { if (c.controllerId === data.newMainId) c.isMain = true; });
+            mainControllerId = data.newMainId;
+            controllers.forEach(c => { if (c.controllerId === data.newMainId) c.isMain = true; });
+            gameManager.setMainController(data.newMainId);
         }
-        if (state.controllers.length > 0) renderHub();
+        store.update({ controllers, mainControllerId });
+        if (controllers.length > 0 && !store.current.activeGame) renderer.renderHub(store.current);
     });
 
-    socket.on(SOCKET_EVENTS.ALL_CONTROLLERS_GONE, () => {
-        console.log('[Room] All controllers disconnected');
-        state.controllers = [];
-        state.mainControllerId = '';
-        state.appState = 'connecting';
-        state.activeGame?.destroy();
-        state.activeGame = null;
-        renderWelcome();
-        updateRoomInfo(state.roomId);
+    sc.on(SOCKET_EVENTS.ALL_CONTROLLERS_GONE, () => {
+        gameManager.destroy();
+        store.update({
+            controllers: [],
+            mainControllerId: '',
+            appState: 'connecting',
+            activeGame: null
+        });
+        renderer.renderWelcome();
+        renderer.updateRoomInfo(store.current);
     });
 
-    socket.on(SOCKET_EVENTS.GAME_INPUT, (data: any) => {
-        if (state.activeGame) {
-            state.activeGame.handleInput(data);
-            return;
-        }
-        if (data.action === 'RIGHT') moveFocus(1);
-        else if (data.action === 'LEFT') moveFocus(-1);
-        else if (data.action === 'SELECT') launchGame(socket);
+    sc.on(SOCKET_EVENTS.GAME_INPUT, onInput);
+
+    sc.on('connect_error', (err) => {
+        renderer.updateStatus(`Lỗi kết nối: ${err.message}`);
     });
 
-    // 2. Define the connect handler
+    sc.on('disconnect', () => {
+        renderer.updateStatus('Mất kết nối server...');
+    });
+
     const handleConnect = () => {
-        console.log('[Socket] Connected:', socket.id);
-        const statusEl = document.querySelector('#status-msg');
-        if (statusEl) statusEl.textContent = 'Đã kết nối, đang tạo phòng...';
-        socket.emit(SOCKET_EVENTS.CREATE_ROOM, { lanIp: state.lanIp });
+        renderer.updateStatus('Đã kết nối, đang tạo phòng...');
+        sc.createRoom(store.current.lanIp);
     };
 
-    // 3. Register it and trigger if already connected
-    socket.on('connect', handleConnect);
-    if (socket.connected) {
-        handleConnect();
-    }
+    sc.on('connect', handleConnect);
+    if (sc.connected) handleConnect();
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
-// Async IIFE: detect LAN IP first, then connect socket and render.
 (async () => {
     try {
-        renderWelcome();
+        renderer.renderWelcome();
 
-        // Initialize socket context
-        const ctx = await createSocketContext(false); // autoConnect: false
+        const ctx = await createSocketContext(false);
+        socketClient = new SocketClient(ctx.socket);
+        gameManager = new GameManager(socketClient);
 
-        state.lanIp = ctx.lanIp;
-        state.mobileUrl = ctx.mobileUrl;
+        store.update({ lanIp: ctx.lanIp, mobileUrl: ctx.mobileUrl });
 
-        bindSocketEvents(ctx.socket);
+        bindEvents(socketClient);
+        socketClient.connect();
 
-        // Connect AFTER all event listeners are registered
-        ctx.socket.connect();
     } catch (err) {
-        console.error('[App] Critical bootstrap error:', err);
-        const appEl = document.querySelector('#app');
-        if (appEl) {
-            appEl.innerHTML = `
-                <div style="padding: 40px; color: #ff4444; text-align: center;">
-                    <h1>Lỗi khởi động</h1>
-                    <p>${err instanceof Error ? err.message : String(err)}</p>
-                    <button onclick="window.location.reload()">Thử lại</button>
-                </div>
-            `;
-        }
+        console.error('[App] Bootstrap error:', err);
+        renderer.container.innerHTML = `
+            <div style="padding: 40px; color: #ff4444; text-align: center;">
+                <h1>Lỗi khởi động</h1>
+                <p>${err instanceof Error ? err.message : String(err)}</p>
+                <button onclick="window.location.reload()">Thử lại</button>
+            </div>
+        `;
     }
 })();

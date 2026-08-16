@@ -1,0 +1,50 @@
+{
+    "laps": 3,
+    "cars": [
+        {
+            "id": "comet",
+            "name": "Comet",
+            "color": "#ef4444",
+            "accent": "#fef2f2",
+            "maxSpeed": 38,
+            "acceleration": 22,
+            "handling": 2.15
+        },
+        {
+            "id": "volt",
+            "name": "Volt",
+            "color": "#3b82f6",
+            "accent": "#dbeafe",
+            "maxSpeed": 35,
+            "acceleration": 26,
+            "handling": 2.3
+        },
+        {
+            "id": "terra",
+            "name": "Terra",
+            "color": "#22c55e",
+            "accent": "#dcfce7",
+            "maxSpeed": 33,
+            "acceleration": 20,
+            "handling": 2.65
+        }
+    ],
+    "maps": [
+        {
+            "id": "sunset_ring",
+            "name": "Sunset Ring",
+            "roadWidth": 15,
+            "groundColor": "#31572c",
+            "skyColor": "#f59e0b",
+            "points": [[0, -55], [42, -47], [67, -18], [61, 28], [30, 54], [-22, 57], [-61, 31], [-69, -13], [-43, -45]]
+        },
+        {
+            "id": "alpine_run",
+            "name": "Alpine Run",
+            "roadWidth": 13,
+            "groundColor": "#365314",
+            "skyColor": "#7dd3fc",
+            "points": [[0, -62], [35, -56], [58, -38], [49, -10], [70, 18], [48, 49], [13, 57], [-18, 40], [-52, 53], [-70, 21], [-55, -16], [-31, -39]]
+        }
+    ]
+}

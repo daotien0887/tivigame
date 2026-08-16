@@ -77,7 +77,7 @@ export const GoldMinerController: React.FC<Props> = ({ onInput, gameState }) => 
                     style={{ width: 110, height: 110, fontSize: 40, borderRadius: 55, background: '#AA4400', border: 'none', color: '#fff', cursor: 'pointer' }}
                 >💣</button>
                 <button
-                    onClick={send('BACK')}
+                    onClick={() => onInput('SHOP')}
                     style={{ width: 110, height: 110, fontSize: 18, borderRadius: 55, background: '#444', border: 'none', color: '#fff', cursor: 'pointer' }}
                 >SHOP</button>
             </div>

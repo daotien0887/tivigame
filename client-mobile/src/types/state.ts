@@ -9,7 +9,13 @@ export type GameState =
     | 'paused'
     | 'game_over'
     | 'shop'
-    | 'mining';
+    | 'mining'
+    | 'mode_select'
+    | 'map_select'
+    | 'car_select'
+    | 'lobby'
+    | 'racing'
+    | 'race_results';
 
 export interface ControllerProfile {
     name: string;
