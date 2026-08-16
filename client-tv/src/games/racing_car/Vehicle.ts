@@ -4,7 +4,7 @@ import { Track } from './Track';
 
 export class Vehicle {
     public readonly object = new THREE.Group();
-    public readonly input: RacingInputState = { accelerate: false, brake: false, left: false, right: false };
+    public readonly input: RacingInputState = { accelerate: false, brake: false, steering: 0, gear: 1 };
     public speed = 0;
     public heading: number;
     public lap = 0;
@@ -32,14 +32,24 @@ export class Vehicle {
             this.speed *= Math.max(0, 1 - dt * 2.5);
         } else {
             const maxSpeed = this.definition.maxSpeed;
-            if (this.input.accelerate) this.speed += this.definition.acceleration * dt;
-            if (this.input.brake) this.speed -= (this.speed > 0 ? 31 : 13) * dt;
-            if (!this.input.accelerate && !this.input.brake) this.speed *= Math.max(0, 1 - dt * 0.75);
-            this.speed = THREE.MathUtils.clamp(this.speed, -maxSpeed * 0.28, maxSpeed);
+            if (this.input.brake) {
+                this.speed = this.moveTowardsZero(this.speed, 46 * dt);
+            } else if (this.input.accelerate) {
+                const movingAgainstGear = Math.abs(this.speed) > 0.25
+                    && Math.sign(this.speed) !== this.input.gear;
+                if (movingAgainstGear) {
+                    this.speed = this.moveTowardsZero(this.speed, 44 * dt);
+                } else {
+                    const gearAcceleration = this.input.gear === -1 ? 0.72 : 1;
+                    this.speed += this.definition.acceleration * gearAcceleration * this.input.gear * dt;
+                }
+            } else {
+                this.speed = this.moveTowardsZero(this.speed, 2.4 * dt);
+            }
+            this.speed = THREE.MathUtils.clamp(this.speed, -maxSpeed * 0.42, maxSpeed);
 
-            const steer = Number(this.input.right) - Number(this.input.left);
-            const steerStrength = THREE.MathUtils.clamp(Math.abs(this.speed) / 9, 0.18, 1);
-            this.heading += steer * this.definition.handling * steerStrength * dt * Math.sign(this.speed || 1);
+            const signedSpeedRatio = THREE.MathUtils.clamp(this.speed / 11, -1, 1);
+            this.heading += this.input.steering * this.definition.handling * signedSpeedRatio * dt;
         }
 
         const forward = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
@@ -66,6 +76,11 @@ export class Vehicle {
             }
         });
         this.object.removeFromParent();
+    }
+
+    private moveTowardsZero(value: number, amount: number): number {
+        if (Math.abs(value) <= amount) return 0;
+        return value - Math.sign(value) * amount;
     }
 
     private buildMesh(): void {

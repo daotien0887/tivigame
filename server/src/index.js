@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const os = require('os');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const roomManager = require('./roomManager');
@@ -29,7 +30,17 @@ app.get('/myip', (req, res) => {
     const forwarded = req.headers['x-forwarded-for'];
     const raw = forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress || '';
     // Strip IPv6 prefix (::ffff:) for clean IPv4 output
-    const ip = raw.replace(/^::ffff:/, '');
+    let ip = raw.replace(/^::ffff:/, '');
+    if (ip === '127.0.0.1' || ip === '::1') {
+        const interfaces = os.networkInterfaces();
+        const lanAddress = Object.values(interfaces)
+            .flat()
+            .find(address => address
+                && address.family === 'IPv4'
+                && !address.internal
+                && /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(address.address));
+        if (lanAddress) ip = lanAddress.address;
+    }
     res.json({ ip });
 });
 

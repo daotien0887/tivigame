@@ -26,34 +26,36 @@ export const ControllerHeader: React.FC<ControllerHeaderProps> = ({
             <div className="header-left">
                 {appState === 'in_game' && (
                     <button
+                        type="button"
                         id="back-btn"
                         className="icon-btn"
                         onClick={() => onInput('BACK')}
-                        title="Back to Hub"
+                        aria-label="Thoát về Hub"
                     >
-                        <Power size={20} style={{ transform: 'rotate(90deg)', color: '#ff4444' }} />
+                        <Power size={20} />
                     </button>
                 )}
                 <span className="player-badge">
-                    P{controllerInfo?.playerIndex}
-                    {controllerInfo?.isMain && ' ★'}
+                    <span>P{controllerInfo?.playerIndex}</span>
+                    {controllerInfo?.isMain && <b>MAIN</b>}
                 </span>
             </div>
 
             <div className="header-center">
                 <span className="game-id-badge">{gameId.replace('_', ' ').toUpperCase()}</span>
                 {transport && (
-                    <span className="transport-badge" title="Connection type">
-                        {transport === 'lan' ? '⚡' : '🌐'}
+                    <span className={`transport-badge ${transport}`} title="Connection type">
+                        {transport === 'lan' ? '⚡ LAN' : '🌐 NET'}
                     </span>
                 )}
             </div>
 
             <button
+                type="button"
                 id="menu-toggle-btn"
                 className="icon-btn"
                 onClick={onToggleMenu}
-                title="Menu"
+                aria-label="Mở menu"
             >
                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

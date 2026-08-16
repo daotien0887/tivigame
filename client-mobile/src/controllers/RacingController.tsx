@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { ControllerProps } from './index';
 
 interface RacingCarData {
@@ -29,11 +29,22 @@ export const RacingController: React.FC<ControllerProps> = ({
     const selection = selections[controllerId];
     const selectedCar = cars[selection?.carIndex ?? 0];
     const held = useRef(new Set<string>());
+    const wheelGesture = useRef<{ pointerId: number; startAngle: number; startRotation: number } | null>(null);
+    const [wheelRotation, setWheelRotation] = useState(0);
+    const [gear, setGear] = useState<'forward' | 'reverse'>('forward');
+
+    const releaseWheel = useCallback(() => {
+        const wasActive = wheelGesture.current !== null;
+        wheelGesture.current = null;
+        setWheelRotation(0);
+        if (wasActive) onInput('STEER', 'released', 0);
+    }, [onInput]);
 
     const releaseAll = useCallback(() => {
         held.current.forEach(action => onInput(action, 'released', 0));
         held.current.clear();
-    }, [onInput]);
+        releaseWheel();
+    }, [onInput, releaseWheel]);
 
     useEffect(() => {
         const onVisibility = () => { if (document.hidden) releaseAll(); };
@@ -68,6 +79,73 @@ export const RacingController: React.FC<ControllerProps> = ({
         },
         onContextMenu: (event: React.MouseEvent) => event.preventDefault(),
     });
+
+    const pointerAngle = (event: React.PointerEvent<HTMLButtonElement>) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        return Math.atan2(
+            event.clientY - (rect.top + rect.height / 2),
+            event.clientX - (rect.left + rect.width / 2),
+        ) * 180 / Math.PI;
+    };
+
+    const onWheelDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        wheelGesture.current = {
+            pointerId: event.pointerId,
+            startAngle: pointerAngle(event),
+            startRotation: wheelRotation,
+        };
+    };
+
+    const onWheelMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+        const gesture = wheelGesture.current;
+        if (!gesture || gesture.pointerId !== event.pointerId) return;
+        let delta = pointerAngle(event) - gesture.startAngle;
+        if (delta > 180) delta -= 360;
+        if (delta < -180) delta += 360;
+        const rotation = Math.max(-120, Math.min(120, gesture.startRotation + delta));
+        setWheelRotation(rotation);
+        onInput('STEER', 'pressed', rotation / 120);
+    };
+
+    const changeGear = (next: 'forward' | 'reverse') => {
+        setGear(next);
+        onInput(next === 'forward' ? 'GEAR_FORWARD' : 'GEAR_REVERSE');
+    };
+
+    const requestLandscape = useCallback(async () => {
+        try {
+            if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+            }
+            const orientation = screen.orientation as ScreenOrientation & {
+                lock?: (value: 'landscape') => Promise<void>;
+            };
+            await orientation.lock?.('landscape');
+        } catch {
+            // iOS Safari does not expose orientation lock; the rotate prompt remains visible.
+        }
+    }, []);
+
+    useEffect(() => {
+        if (gameState !== 'countdown' && gameState !== 'racing') return;
+        const orientation = screen.orientation as ScreenOrientation & {
+            lock?: (value: 'landscape') => Promise<void>;
+        };
+        orientation.lock?.('landscape').catch(() => undefined);
+    }, [gameState]);
+
+    const landscapeGate = (
+        <div className="racing-landscape-gate">
+            <div>
+                <span>↻</span>
+                <h2>Xoay ngang điện thoại</h2>
+                <p>Game đua xe cần tay cầm ở chế độ ngang.</p>
+                <button type="button" onClick={requestLandscape}>BẬT MÀN HÌNH NGANG</button>
+            </div>
+        </div>
+    );
 
     if (gameState === 'mode_select' || gameState === 'map_select') {
         return (
@@ -131,6 +209,7 @@ export const RacingController: React.FC<ControllerProps> = ({
     if (gameState === 'countdown') {
         return (
             <div className="racing-controller racing-waiting">
+                {landscapeGate}
                 <span>🏁</span>
                 <h1>{String(extraData.countdown ?? 3)}</h1>
                 <p>Chuẩn bị!</p>
@@ -164,13 +243,52 @@ export const RacingController: React.FC<ControllerProps> = ({
 
     return (
         <div className="racing-controller racing-drive">
-            <div className="racing-steering">
-                <button {...holdProps('STEER_LEFT')}>◀</button>
-                <button {...holdProps('STEER_RIGHT')}>▶</button>
+            {landscapeGate}
+            <div className="racing-wheel-area">
+                <span className="racing-control-title">ĐÁNH LÁI</span>
+                <div className="steering-wheel-shell">
+                    <button
+                        type="button"
+                        className={`steering-wheel ${wheelGesture.current ? 'dragging' : ''}`}
+                        role="slider"
+                        aria-label="Vô lăng"
+                        aria-valuemin={-100}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(wheelRotation / 1.2)}
+                        style={{ transform: `rotate(${wheelRotation}deg)` }}
+                        onPointerDown={onWheelDown}
+                        onPointerMove={onWheelMove}
+                        onPointerUp={releaseWheel}
+                        onPointerCancel={releaseWheel}
+                        onLostPointerCapture={releaseWheel}
+                        onContextMenu={event => event.preventDefault()}
+                    >
+                        <span className="wheel-spoke spoke-left" />
+                        <span className="wheel-spoke spoke-right" />
+                        <span className="wheel-spoke spoke-bottom" />
+                        <span className="wheel-horn">🏁</span>
+                    </button>
+                </div>
+                <output>{Math.round(wheelRotation / 1.2)}%</output>
+            </div>
+            <div className="racing-gear">
+                <span className="racing-control-title">CẦN SỐ</span>
+                <button
+                    type="button"
+                    className={gear === 'reverse' ? 'active' : ''}
+                    onClick={() => changeGear('reverse')}
+                ><b>R</b><small>LÙI</small></button>
+                <div className={`gear-lever ${gear}`}><span /></div>
+                <button
+                    type="button"
+                    className={gear === 'forward' ? 'active' : ''}
+                    onClick={() => changeGear('forward')}
+                ><b>D</b><small>TIẾN</small></button>
             </div>
             <div className="racing-pedals">
-                <button className="racing-brake" {...holdProps('BRAKE')}><span>PHANH</span></button>
-                <button className="racing-gas" {...holdProps('ACCELERATE')}><span>GA</span></button>
+                <span className="racing-control-title">BÀN ĐẠP</span>
+                <button className="racing-brake" {...holdProps('BRAKE')}><b>PHANH</b><small>DỪNG XE</small></button>
+                <button className="racing-gas" {...holdProps('ACCELERATE')}><b>GA</b><small>TĂNG TỐC</small></button>
             </div>
         </div>
     );

@@ -1,7 +1,16 @@
 import { io, Socket } from 'socket.io-client';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL as string;
-const MOBILE_URL = import.meta.env.VITE_MOBILE_URL as string;
+function resolveLocalUrl(configuredUrl: string): string {
+    const url = new URL(configuredUrl);
+    const openedFromLan = !['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (openedFromLan && ['localhost', '127.0.0.1'].includes(url.hostname)) {
+        url.hostname = window.location.hostname;
+    }
+    return url.origin;
+}
+
+const SERVER_URL = resolveLocalUrl(import.meta.env.VITE_SERVER_URL as string);
+const MOBILE_URL = resolveLocalUrl(import.meta.env.VITE_MOBILE_URL as string);
 
 export interface SocketContext {
     socket: Socket;

@@ -15,6 +15,8 @@ export const ConnectScreen: React.FC<ConnectScreenProps> = ({
     connected,
     transport
 }) => {
+    const isPinComplete = /^\d{4}$/.test(roomId);
+
     return (
         <div className="connect-screen">
             <h1>TiviGame</h1>
@@ -27,13 +29,13 @@ export const ConnectScreen: React.FC<ConnectScreenProps> = ({
                     maxLength={4}
                     placeholder="PIN (4 chữ số)"
                     value={roomId}
-                    onChange={(e) => setRoomId(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && onJoin()}
+                    onChange={(e) => setRoomId(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onKeyDown={(e) => e.key === 'Enter' && isPinComplete && onJoin()}
                 />
                 <button
                     id="join-btn"
                     onClick={onJoin}
-                    disabled={!connected || !roomId.trim()}
+                    disabled={!connected || !isPinComplete}
                 >
                     {connected ? 'Kết nối ngay' : 'Đang kết nối...'}
                 </button>

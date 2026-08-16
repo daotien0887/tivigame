@@ -1,552 +1,781 @@
-* {
-    box-sizing: border-box;
+:root {
+    font-family: Inter, ui-rounded, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f8fafc;
+    background: #070b13;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    --surface: #111827;
+    --surface-raised: #1e293b;
+    --line: rgba(255, 255, 255, 0.1);
+    --muted: #94a3b8;
+    --accent: #fbbf24;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
 }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body, #root { width: 100%; height: 100%; min-height: 100%; }
 
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #121212;
-    color: white;
     overflow: hidden;
+    overscroll-behavior: none;
+    background: radial-gradient(circle at 18% -10%, rgba(59, 130, 246, 0.2), transparent 36%), #070b13;
+    color: #f8fafc;
     user-select: none;
     -webkit-touch-callout: none;
 }
 
+button, input { font: inherit; }
+button { border: 0; color: #fff; cursor: pointer; touch-action: manipulation; }
+button:focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
+button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+/* Connection */
 .connect-screen {
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding: 40px;
-    height: 100vh;
     justify-content: center;
     align-items: center;
+    padding: calc(28px + var(--safe-top)) calc(24px + var(--safe-right)) calc(28px + var(--safe-bottom)) calc(24px + var(--safe-left));
     text-align: center;
 }
 
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.connect-screen::before {
+    content: "🎮";
+    display: grid;
+    place-items: center;
+    width: 82px;
+    height: 82px;
+    margin-bottom: 12px;
+    border: 1px solid var(--line);
+    border-radius: 26px;
+    background: linear-gradient(145deg, #1d4ed8, #312e81);
+    box-shadow: 0 18px 45px rgba(30, 64, 175, 0.38);
+    font-size: 2.7rem;
+}
+
+.connect-screen h1 { margin: 6px 0 4px; font-size: clamp(2.4rem, 12vw, 4rem); letter-spacing: -0.06em; }
+.connect-subtitle { margin: 0 0 30px; color: var(--muted); }
+.input-group { width: min(100%, 380px); display: flex; flex-direction: column; gap: 14px; }
+
+.input-group input {
     width: 100%;
-}
-
-input {
-    padding: 15px;
-    border-radius: 10px;
-    border: none;
-    font-size: 1.5rem;
+    min-height: 66px;
+    padding: 12px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    outline: none;
+    background: rgba(15, 23, 42, 0.82);
+    color: #fff;
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
     text-align: center;
 }
 
-button {
-    padding: 15px;
-    border-radius: 10px;
-    border: none;
-    background: #646cff;
-    color: white;
-    font-size: 1.2rem;
-    font-weight: bold;
+.input-group input:focus { border-color: #60a5fa; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18); }
+
+.input-group button {
+    min-height: 60px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    box-shadow: 0 8px 0 #1e3a8a;
+    font-size: 1.05rem;
+    font-weight: 900;
 }
 
-.controller-screen {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+.input-group button:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 3px 0 #1e3a8a; }
+
+.transport-hint {
+    margin-top: 24px;
+    padding: 7px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.72);
+    color: #cbd5e1;
+    font-size: 0.76rem;
+    font-weight: 800;
 }
 
-header {
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #1a1a1a;
-    border-bottom: 1px solid #333;
-}
-
-.player-badge {
-    background: #444;
-    padding: 4px 12px;
-    border-radius: 15px;
-    font-weight: bold;
-    color: #ffd700;
-}
-
-.game-id-badge {
-    color: #646cff;
-    font-weight: bold;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
+/* Controller shell */
+.controller-screen { width: 100%; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
 .controller-header {
-    background: rgba(26, 26, 26, 0.9);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    position: sticky;
-    top: 0;
+    flex: 0 0 auto;
+    min-height: calc(52px + var(--safe-top));
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 8px;
+    padding: calc(7px + var(--safe-top)) calc(10px + var(--safe-right)) 7px calc(10px + var(--safe-left));
+    border-bottom: 1px solid var(--line);
+    background: rgba(7, 11, 19, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     z-index: 100;
 }
 
-.header-left,
-.header-center {
-    display: flex;
+.header-left, .header-center { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.header-center { justify-content: center; }
+.controller-header > .icon-btn:last-child { justify-self: end; }
+
+.player-badge {
+    min-height: 34px;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid rgba(251, 191, 36, 0.28);
+    border-radius: 11px;
+    background: rgba(251, 191, 36, 0.09);
+    color: #fde68a;
+    font-size: 0.82rem;
+    font-weight: 900;
 }
 
-.transport-badge {
-    font-size: 0.8rem;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-    color: #aaa;
+.player-badge b { padding: 2px 5px; border-radius: 5px; background: #fbbf24; color: #422006; font-size: 0.55rem; letter-spacing: 0.08em; }
+
+.game-id-badge {
+    max-width: 38vw;
+    overflow: hidden;
+    color: #e2e8f0;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.transport-hint {
-    margin-top: 15px;
-    font-size: 0.8rem;
-    color: #666;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 4px 12px;
-    border-radius: 20px;
+.transport-badge { padding: 4px 6px; border-radius: 7px; background: rgba(255, 255, 255, 0.07); color: var(--muted); font-size: 0.58rem; font-weight: 900; }
+.transport-badge.lan { color: #86efac; }
+
+.icon-btn, .disconnect-btn {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
 }
 
-.controller-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
+#back-btn { border-color: rgba(239, 68, 68, 0.2); color: #f87171; }
+.icon-btn:active, .disconnect-btn:active { transform: scale(0.92); background: rgba(255, 255, 255, 0.14); }
+.controller-main { min-width: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
 .controller-layout {
+    width: 100%;
+    min-height: 0;
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
-    padding: 20px;
+    justify-content: space-evenly;
+    padding: clamp(12px, 3vmin, 24px) calc(clamp(12px, 3vmin, 24px) + var(--safe-right)) calc(clamp(12px, 3vmin, 24px) + var(--safe-bottom)) calc(clamp(12px, 3vmin, 24px) + var(--safe-left));
 }
 
-.dpad-container {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.control-caption { color: #64748b; font-size: 0.62rem; font-weight: 900; letter-spacing: 0.18em; }
+
+/* Hub controller */
+.hub-controller {
+    background: radial-gradient(circle at 20% 80%, rgba(37, 99, 235, 0.18), transparent 34%), radial-gradient(circle at 80% 20%, rgba(239, 68, 68, 0.14), transparent 34%);
 }
+
+.dpad-container, .action-container { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
 
 .dpad {
+    --dpad-size: clamp(188px, 52vmin, 264px);
     position: relative;
-    width: 240px;
-    height: 240px;
+    width: var(--dpad-size);
+    height: var(--dpad-size);
+    filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.38));
 }
 
 .dpad button {
     position: absolute;
-    width: 80px;
-    height: 80px;
-    background: #333;
+    width: 33.333%;
+    height: 33.333%;
+    display: grid;
+    place-items: center;
     padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(145deg, #334155, #1e293b);
+    color: #dbeafe;
+    box-shadow: inset 0 -6px 0 rgba(2, 6, 23, 0.5);
+    z-index: 2;
 }
 
-.dpad .up {
-    top: 0;
-    left: 80px;
-    border-radius: 10px 10px 0 0;
-}
-
-.dpad .down {
-    bottom: 0;
-    left: 80px;
-    border-radius: 0 0 10px 10px;
-}
-
-.dpad .left {
-    top: 80px;
-    left: 0;
-    border-radius: 10px 0 0 10px;
-}
-
-.dpad .right {
-    top: 80px;
-    right: 0;
-    border-radius: 0 10px 10px 0;
-}
+.dpad button svg { width: 48%; height: 48%; stroke-width: 3; }
+.dpad button:active { filter: brightness(1.45); transform: translateY(3px); box-shadow: inset 0 -2px 0 rgba(2, 6, 23, 0.5), 0 0 22px rgba(59, 130, 246, 0.34); }
+.dpad .up { top: 0; left: 33.333%; border-radius: 18px 18px 5px 5px; }
+.dpad .down { bottom: 0; left: 33.333%; border-radius: 5px 5px 18px 18px; }
+.dpad .left { top: 33.333%; left: 0; border-radius: 18px 5px 5px 18px; }
+.dpad .right { top: 33.333%; right: 0; border-radius: 5px 18px 18px 5px; }
 
 .dpad .center {
     position: absolute;
-    top: 80px;
-    left: 80px;
-    width: 80px;
-    height: 80px;
-    background: #333;
-}
-
-.action-container {
-    padding: 40px;
-    display: flex;
-    justify-content: center;
+    top: 33.333%;
+    left: 33.333%;
+    width: 33.333%;
+    height: 33.333%;
+    border-radius: 8px;
+    background: radial-gradient(circle, #475569 0 17%, #1e293b 20% 100%);
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.42);
 }
 
 .btn-ok {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
+    width: clamp(108px, 27vmin, 156px);
+    height: clamp(108px, 27vmin, 156px);
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     gap: 5px;
-    background: #ff4444;
-    box-shadow: 0 6px 0 #cc0000;
+    border: 5px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 30%, #fb7185, #dc2626 64%);
+    box-shadow: 0 9px 0 #7f1d1d, 0 20px 35px rgba(127, 29, 29, 0.35);
+    font-size: 1.2rem;
+    font-weight: 1000;
 }
 
-.btn-ok:active {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 #cc0000;
-}
+.btn-ok svg { width: 30%; height: 30%; }
+.btn-ok:active { transform: translateY(6px); box-shadow: 0 3px 0 #7f1d1d, 0 8px 18px rgba(127, 29, 29, 0.3); }
 
-/* Flappy Controller */
+/* Flappy controller */
 .flappy-controller {
-    background: linear-gradient(to bottom, #4ec0ca, #2e909a);
+    align-items: center;
+    background: radial-gradient(circle at 50% 110%, rgba(255, 255, 255, 0.18), transparent 32%), linear-gradient(160deg, #0891b2, #155e75);
     text-align: center;
 }
 
-.jump-zone {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+.game-status span { color: #cffafe; font-size: 0.66rem; font-weight: 900; letter-spacing: 0.2em; }
+.game-status h3 { margin: 5px 0 2px; font-size: clamp(1.3rem, 5vmin, 2.2rem); }
+.game-status p { margin: 0; color: #a5f3fc; font-size: 0.86rem; }
+.jump-zone { min-height: 0; flex: 1; display: grid; place-items: center; width: 100%; }
 
 .btn-jump {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: #f7941d;
-    border: 8px solid #fff;
-    box-shadow: 0 10px 0 #d67b00;
+    width: clamp(172px, 42vmin, 250px);
+    height: clamp(172px, 42vmin, 250px);
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    transition: transform 0.1s;
-}
-
-.btn-jump:active {
-    transform: translateY(10px);
-    box-shadow: 0 0 0 #d67b00;
-}
-
-.btn-jump span {
-    font-size: 2rem;
-}
-
-.webview-warning {
-    padding: 40px;
-    text-align: center;
-    color: #ff4444;
-}
-
-.icon-btn,
-.disconnect-btn {
-    background: none;
-    border: none;
-    color: #ccc;
-    cursor: pointer;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s;
-}
-
-.icon-btn:active,
-.disconnect-btn:active {
-    color: #fff;
-    transform: scale(0.9);
-}
-
-/* Menu Overlay */
-.menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-}
-
-.menu-content {
-    background: #1e1e1e;
-    width: 100%;
-    max-width: 400px;
-    border-radius: 20px 20px 0 0;
-    padding: 24px;
-    border-top: 1px solid #333;
-    animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(100%);
-    }
-
-    to {
-        transform: translateY(0);
-    }
-}
-
-.menu-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-}
-
-.menu-header h3 {
-    margin: 0;
-    color: #646cff;
-}
-
-.menu-header button {
-    background: #333;
-    padding: 8px;
+    border: 7px solid rgba(255, 255, 255, 0.82);
     border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, #fcd34d, #f97316 68%);
+    box-shadow: 0 11px 0 #c2410c, 0 26px 45px rgba(124, 45, 18, 0.36);
+    font-weight: 1000;
 }
 
-.menu-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+.btn-jump svg { width: 32%; height: 32%; }
+.btn-jump span { font-size: clamp(1.1rem, 4vmin, 1.7rem); }
+.btn-jump.replay { background: radial-gradient(circle at 35% 28%, #64748b, #1e293b 68%); box-shadow: 0 11px 0 #0f172a, 0 26px 45px rgba(2, 6, 23, 0.4); }
+.btn-jump:active { transform: translateY(8px) scale(0.98); box-shadow: 0 3px 0 #c2410c, 0 10px 20px rgba(124, 45, 18, 0.3); }
 
-.menu-item {
-    display: flex;
+/* Gold Miner controller */
+.gold-controller {
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: #2a2a2a;
-    border: 1px solid #333;
-    width: 100%;
-    text-align: left;
-    font-size: 1.1rem;
+    gap: clamp(10px, 2.4vmin, 20px);
+    background: radial-gradient(circle at 50% -20%, rgba(245, 158, 11, 0.22), transparent 42%), linear-gradient(160deg, #25170e, #0f0a07 65%);
 }
 
-.menu-item:active {
-    background: #444;
-}
+.gold-hint { margin: 0; color: #fcd34d; font-size: 0.72rem; font-weight: 1000; letter-spacing: 0.2em; }
+.gold-dpad { --gold-key: clamp(56px, 18vmin, 82px); display: grid; grid-template-columns: repeat(3, var(--gold-key)); grid-template-rows: repeat(3, var(--gold-key)); gap: clamp(4px, 1vmin, 8px); }
 
-.menu-item.danger {
-    color: #ff4444;
-}
-
-.menu-item.danger:active {
-    background: rgba(255, 68, 68, 0.15);
-}
-
-/* Racing Controller */
-.racing-controller {
-    min-height: 100%;
-    box-sizing: border-box;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 18px;
-    background: radial-gradient(circle at top, #263349, #090d16 70%);
-    color: #fff;
-    touch-action: none;
-    user-select: none;
-}
-
-.racing-controller button {
-    border: 0;
-    color: #fff;
-    font-weight: 900;
-    touch-action: none;
-}
-
-.racing-controller-label {
-    color: #fbbf24;
-    font-size: 0.85rem;
-    font-weight: 900;
-    letter-spacing: 0.16em;
-}
-
-.racing-menu-controller {
-    justify-content: space-around;
-    text-align: center;
-}
-
-.racing-menu-actions,
-.racing-select-arrows,
-.racing-result-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-}
-
-.racing-menu-actions button,
-.racing-select-arrows button {
-    width: 84px;
-    height: 84px;
-    border-radius: 22px;
-    background: #334155;
-    font-size: 2rem;
-    box-shadow: 0 7px 0 #111827;
-}
-
-.racing-menu-actions .racing-ok {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: #dc2626;
-    font-size: 1.35rem;
-}
-
-.racing-car-select {
-    justify-content: space-around;
-}
-
-.racing-car-preview {
-    width: min(82vw, 330px);
-    padding: 18px;
-    border-radius: 24px;
-    text-align: center;
-    border: 3px solid var(--selected-car);
-    background: #111827;
-    background: color-mix(in srgb, var(--selected-car) 18%, #111827);
-    box-shadow: 0 0 30px color-mix(in srgb, var(--selected-car) 35%, transparent);
-}
-
-.racing-car-preview > span {
-    display: block;
-    font-size: 5rem;
-    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35));
-}
-
-.racing-car-preview h2 {
-    margin: 4px 0 14px;
-}
-
-.racing-stats {
+.gold-direction, .gold-dpad-center {
+    width: var(--gold-key);
+    height: var(--gold-key);
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    place-items: center;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #3f3f46, #27272a);
 }
 
-.racing-stats small {
+.gold-direction { box-shadow: inset 0 -6px 0 #18181b; font-size: clamp(1.35rem, 5vmin, 2rem); font-weight: 1000; }
+.gold-direction:active { transform: translateY(3px); background: #57534e; box-shadow: inset 0 -2px 0 #18181b; }
+.gold-dpad-center { background: radial-gradient(circle, #57534e, #27272a); }
+.gold-actions { display: flex; gap: clamp(16px, 5vw, 28px); }
+
+.gold-action {
+    width: clamp(88px, 24vmin, 124px);
+    height: clamp(88px, 24vmin, 124px);
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 4px;
-    color: #cbd5e1;
+    border-radius: 50%;
+    box-shadow: 0 8px 0 #292524;
 }
 
-.racing-stats b {
-    color: #fff;
-    font-size: 1rem;
-}
+.gold-action span { font-size: clamp(2rem, 8vmin, 3rem); }
+.gold-action small { font-size: 0.65rem; font-weight: 1000; letter-spacing: 0.1em; }
+.gold-dynamite { background: linear-gradient(145deg, #dc2626, #7f1d1d); }
+.gold-shop-button { background: linear-gradient(145deg, #57534e, #292524); }
+.gold-action:active, .gold-primary:active, .gold-secondary:active { transform: translateY(5px); filter: brightness(1.2); }
+.gold-result { justify-content: center; }
+.gold-controller-icon { font-size: 4.5rem; }
+.gold-result h2, .gold-shop h2 { margin: 0; color: #fcd34d; font-size: clamp(1.8rem, 7vmin, 2.8rem); }
 
-.racing-ready,
-.racing-start,
-.racing-result-actions button {
-    width: min(82vw, 330px);
+.gold-primary, .gold-secondary {
+    width: min(330px, 82vw);
     min-height: 58px;
     border-radius: 16px;
-    background: #475569;
-    font-size: 1rem;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    box-shadow: 0 6px 0 #14532d;
+    font-weight: 900;
 }
 
-.racing-ready.active {
-    background: #15803d;
-}
+.gold-secondary { background: #3f3f46; box-shadow: 0 6px 0 #18181b; }
+.gold-shop { justify-content: center; }
+.gold-shop-title { display: flex; align-items: center; gap: 10px; }
+.gold-shop-title span { font-size: 2.5rem; }
+.gold-shop-nav { display: flex; align-items: center; gap: clamp(8px, 3vw, 16px); }
 
-.racing-start {
-    background: #dc2626;
-    box-shadow: 0 6px 0 #7f1d1d;
-}
-
-.racing-waiting {
-    text-align: center;
-}
-
-.racing-waiting > span {
-    font-size: 5rem;
-}
-
-.racing-waiting h1 {
-    margin: 0;
-    font-size: 7rem;
-    color: #fbbf24;
-}
-
-.racing-result-actions {
-    flex-direction: column;
-}
-
-.racing-drive {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: stretch;
-    padding: 14px;
-}
-
-.racing-steering,
-.racing-pedals {
-    flex: 1;
+.gold-shop-nav button {
+    width: clamp(78px, 23vw, 112px);
+    height: clamp(90px, 25vmin, 130px);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
+    border-radius: 18px;
+    background: #3f3f46;
+    box-shadow: inset 0 -7px 0 #18181b;
+    font-size: 1.7rem;
 }
 
-.racing-steering button {
-    width: min(21vw, 120px);
-    height: min(58vh, 180px);
-    border-radius: 24px;
-    background: #334155;
-    font-size: 2.4rem;
-    box-shadow: inset 0 -8px 0 #1e293b;
+.gold-shop-nav button small { font-size: 0.63rem; font-weight: 1000; }
+.gold-shop-nav .gold-buy { background: #15803d; box-shadow: inset 0 -7px 0 #14532d; }
+
+/* Racing controller */
+.racing-controller {
+    position: relative;
+    width: 100%;
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 2.5vmin, 18px);
+    padding: clamp(12px, 3vmin, 22px) calc(clamp(12px, 3vmin, 22px) + var(--safe-right)) calc(clamp(12px, 3vmin, 22px) + var(--safe-bottom)) calc(clamp(12px, 3vmin, 22px) + var(--safe-left));
+    overflow: hidden;
+    background: radial-gradient(circle at 20% 10%, rgba(59, 130, 246, 0.22), transparent 36%), radial-gradient(circle at 90% 90%, rgba(220, 38, 38, 0.15), transparent 38%), #090d16;
+    touch-action: none;
 }
 
-.racing-pedals button {
-    width: min(22vw, 130px);
-    height: min(64vh, 210px);
-    border-radius: 30px;
+.racing-landscape-gate { display: none; }
+
+.racing-controller button { font-weight: 1000; touch-action: none; }
+.racing-controller-label, .racing-control-title { color: #fbbf24; font-size: 0.65rem; font-weight: 1000; letter-spacing: 0.18em; }
+.racing-menu-controller { justify-content: space-around; text-align: center; }
+.racing-menu-controller h2, .racing-waiting h2 { margin: 7px 0 3px; font-size: clamp(1.6rem, 7vmin, 2.8rem); }
+.racing-menu-controller p, .racing-waiting p { margin: 0; color: var(--muted); }
+.racing-menu-actions, .racing-select-arrows, .racing-result-actions { display: flex; align-items: center; justify-content: center; gap: clamp(12px, 4vw, 20px); }
+
+.racing-menu-actions button, .racing-select-arrows button {
+    width: clamp(72px, 20vmin, 96px);
+    height: clamp(72px, 20vmin, 96px);
+    border-radius: 22px;
+    background: linear-gradient(145deg, #475569, #1e293b);
+    box-shadow: 0 7px 0 #0f172a;
+    font-size: clamp(1.5rem, 6vmin, 2.2rem);
+}
+
+.racing-menu-actions button:active, .racing-select-arrows button:active { transform: translateY(5px); box-shadow: 0 2px 0 #0f172a; }
+
+.racing-menu-actions .racing-ok {
+    width: clamp(86px, 23vmin, 112px);
+    height: clamp(86px, 23vmin, 112px);
+    border-radius: 50%;
+    background: linear-gradient(145deg, #f43f5e, #be123c);
+    box-shadow: 0 7px 0 #881337;
     font-size: 1.15rem;
 }
 
-.racing-pedals button span {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    letter-spacing: 0.12em;
+.racing-car-select { justify-content: space-around; }
+
+.racing-car-preview {
+    width: min(82vw, 340px);
+    padding: clamp(12px, 3vmin, 18px);
+    border: 3px solid var(--selected-car);
+    border-radius: 24px;
+    background: #111827;
+    background: color-mix(in srgb, var(--selected-car) 18%, #111827);
+    box-shadow: 0 0 30px color-mix(in srgb, var(--selected-car) 32%, transparent);
+    text-align: center;
 }
 
-.racing-brake {
-    background: #dc2626;
-    box-shadow: inset 0 -9px 0 #7f1d1d;
+.racing-car-preview > span { display: block; font-size: clamp(3rem, 13vmin, 5rem); filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35)); }
+.racing-car-preview h2 { margin: 0 0 10px; }
+.racing-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.racing-stats small { display: flex; flex-direction: column; gap: 3px; color: #94a3b8; font-size: 0.67rem; }
+.racing-stats b { color: #fff; font-size: 0.92rem; }
+
+.racing-ready, .racing-start, .racing-result-actions button {
+    width: min(82vw, 340px);
+    min-height: 54px;
+    border-radius: 16px;
+    background: #475569;
+    box-shadow: 0 6px 0 #1e293b;
 }
 
-.racing-gas {
-    background: #16a34a;
-    box-shadow: inset 0 -9px 0 #14532d;
+.racing-ready.active { background: #15803d; box-shadow: 0 6px 0 #14532d; }
+.racing-start { background: linear-gradient(135deg, #ef4444, #be123c); box-shadow: 0 6px 0 #881337; }
+.racing-ready:active, .racing-start:active, .racing-result-actions button:active { transform: translateY(4px); box-shadow: 0 2px 0 #0f172a; }
+.racing-waiting { text-align: center; }
+.racing-waiting > span { font-size: clamp(3.5rem, 16vmin, 6rem); }
+.racing-waiting h1 { margin: 0; color: #fbbf24; font-size: clamp(5rem, 25vmin, 9rem); }
+.racing-result-actions { margin-top: 20px; flex-direction: column; }
+
+.racing-drive {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.2fr) minmax(82px, 0.42fr) minmax(210px, 1fr);
+    align-items: stretch;
+    gap: clamp(12px, 3vw, 34px);
+    padding-top: 10px;
 }
 
-.racing-drive button:active {
-    transform: translateY(5px);
-    filter: brightness(1.2);
+.racing-wheel-area,
+.racing-pedals {
+    min-width: 0;
+    display: grid;
+    gap: clamp(8px, 2vw, 14px);
+}
+
+.racing-wheel-area {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    justify-items: center;
+}
+
+.racing-control-title { align-self: center; text-align: center; }
+
+.steering-wheel-shell {
+    width: min(35vw, 61vh, 330px);
+    aspect-ratio: 1;
+    align-self: center;
+    display: grid;
+    place-items: center;
+    padding: 4%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.18), transparent 63%);
+}
+
+.steering-wheel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: clamp(13px, 2.6vmin, 22px) solid #334155;
+    border-radius: 50%;
+    background: radial-gradient(circle, #475569 0 18%, #111827 19% 54%, #0f172a 55% 100%);
+    box-shadow: inset 0 0 0 4px #0f172a, inset 0 0 24px #000, 0 18px 35px rgba(0, 0, 0, 0.42);
+    cursor: grab;
+    touch-action: none;
+    transition: transform 70ms linear;
+}
+
+.steering-wheel:active { cursor: grabbing; }
+
+.wheel-spoke {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 38%;
+    height: clamp(12px, 2.3vmin, 20px);
+    border-radius: 999px;
+    background: linear-gradient(#64748b, #334155);
+    transform-origin: left center;
+}
+
+.spoke-left { transform: rotate(158deg); }
+.spoke-right { transform: rotate(22deg); }
+.spoke-bottom { transform: rotate(90deg); }
+
+.wheel-horn {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 31%;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: 4px solid #64748b;
+    border-radius: 50%;
+    background: #0f172a;
+    font-size: clamp(1.1rem, 4vmin, 2rem);
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.racing-wheel-area output {
+    min-width: 52px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.86);
+    color: #93c5fd;
+    font-size: 0.68rem;
+    font-weight: 900;
+    text-align: center;
+}
+
+.racing-gear {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(58px, 1fr) auto;
+    justify-items: center;
+    gap: 8px;
+    padding: 10px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    background: rgba(15, 23, 42, 0.64);
+}
+
+.racing-gear button {
+    width: 100%;
+    min-height: 54px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 13px;
+    background: #1e293b;
+    color: #94a3b8;
+    box-shadow: inset 0 -5px 0 #0f172a;
+}
+
+.racing-gear button b { font-size: 1.3rem; }
+.racing-gear button small { font-size: 0.52rem; font-weight: 900; letter-spacing: 0.1em; }
+.racing-gear button.active { border-color: #fbbf24; background: #854d0e; color: #fef3c7; box-shadow: inset 0 -5px 0 #422006, 0 0 18px rgba(251, 191, 36, 0.2); }
+
+.gear-lever {
+    position: relative;
+    width: 18px;
+    height: 100%;
+    min-height: 66px;
+    border: 4px solid #334155;
+    border-radius: 999px;
+    background: #020617;
+    box-shadow: inset 0 0 8px #000;
+}
+
+.gear-lever span {
+    position: absolute;
+    left: 50%;
+    top: calc(100% - 24px);
+    width: 34px;
+    height: 34px;
+    border: 4px solid #94a3b8;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #e2e8f0, #475569 70%);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.42);
+    transform: translateX(-50%);
+    transition: top 180ms ease;
+}
+
+.gear-lever.reverse span { top: -5px; }
+
+.racing-pedals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto minmax(0, 1fr);
+}
+
+.racing-pedals > .racing-control-title { grid-column: 1 / 3; }
+
+.racing-pedals button {
+    min-width: 0;
+    height: 100%;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: clamp(20px, 5vmin, 32px);
+    font-size: clamp(2rem, 8vmin, 4rem);
+}
+
+.racing-pedals button b { font-size: clamp(1rem, 4vmin, 1.55rem); letter-spacing: 0.08em; }
+.racing-pedals button small { font-size: 0.58rem; font-weight: 900; letter-spacing: 0.12em; opacity: 0.76; }
+.racing-brake { background: linear-gradient(155deg, #f43f5e, #991b1b); box-shadow: inset 0 -10px 0 #7f1d1d, 0 14px 28px rgba(127, 29, 29, 0.26); }
+.racing-gas { background: linear-gradient(155deg, #4ade80, #15803d); box-shadow: inset 0 -10px 0 #14532d, 0 14px 28px rgba(20, 83, 45, 0.28); }
+.racing-pedals button:active,
+.racing-gear button:active { transform: translateY(5px) scale(0.985); filter: brightness(1.25); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.34); }
+
+/* Menu */
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-top: var(--safe-top);
+    background: rgba(2, 6, 23, 0.76);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.menu-content {
+    width: min(100%, 460px);
+    padding: 22px calc(20px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left));
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 26px 26px 0 0;
+    background: #111827;
+    box-shadow: 0 -24px 60px rgba(0, 0, 0, 0.42);
+    animation: slideUp 0.22s ease-out;
+}
+
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.menu-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.menu-header h3 { margin: 0; font-size: 1.35rem; }
+.menu-header button { width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border-radius: 12px; background: #1e293b; }
+.menu-list { display: flex; flex-direction: column; gap: 10px; }
+
+.menu-item {
+    width: 100%;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    background: #1e293b;
+    color: #e2e8f0;
+    font-size: 0.96rem;
+    text-align: left;
+}
+
+.menu-item:active { background: #334155; }
+.menu-item.danger { color: #fca5a5; }
+
+.webview-warning {
+    min-height: 100dvh;
+    display: grid;
+    place-content: center;
+    padding: 32px;
+    color: #fca5a5;
+    text-align: center;
+}
+
+@media (orientation: landscape) {
+    .controller-header { min-height: calc(46px + var(--safe-top)); padding-top: calc(5px + var(--safe-top)); padding-bottom: 5px; }
+    .hub-controller { flex-direction: row; }
+    .dpad-container, .action-container { flex: 1; }
+    .dpad { --dpad-size: clamp(180px, 68vh, 290px); }
+    .btn-ok { width: clamp(116px, 40vh, 175px); height: clamp(116px, 40vh, 175px); }
+    .flappy-controller { flex-direction: row; }
+    .game-status, .jump-zone { flex: 1; }
+    .btn-jump { width: clamp(160px, 54vh, 250px); height: clamp(160px, 54vh, 250px); }
+    .gold-mining { flex-direction: row; }
+    .gold-hint { position: absolute; top: calc(58px + var(--safe-top)); left: 50%; transform: translateX(-50%); }
+    .gold-dpad, .gold-actions { flex: 1; justify-content: center; }
+    .gold-dpad { --gold-key: clamp(54px, 19vh, 84px); }
+    .gold-action { width: clamp(88px, 28vh, 126px); height: clamp(88px, 28vh, 126px); }
+
+    .racing-car-select {
+        display: grid;
+        grid-template-columns: minmax(210px, 1fr) minmax(230px, 1fr);
+        grid-template-rows: auto auto auto auto;
+        gap: 10px clamp(18px, 5vw, 48px);
+    }
+
+    .racing-car-select > .racing-controller-label { grid-column: 1 / 3; }
+
+    .racing-car-preview {
+        grid-column: 1;
+        grid-row: 2 / 5;
+        width: min(40vw, 360px);
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .racing-select-arrows, .racing-ready, .racing-start, .racing-car-select > small { grid-column: 2; width: min(40vw, 360px); }
+    .racing-drive { padding-top: 8px; }
 }
 
 @media (orientation: portrait) {
-    .racing-drive {
-        min-height: 62vh;
+    .racing-landscape-gate {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(2, 6, 23, 0.96);
+        text-align: center;
     }
+
+    .racing-landscape-gate > div {
+        width: min(100%, 360px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .racing-landscape-gate span {
+        display: block;
+        color: #fbbf24;
+        font-size: 5rem;
+        font-weight: 900;
+        line-height: 1;
+        animation: rotatePhone 1.6s ease-in-out infinite;
+    }
+
+    .racing-landscape-gate h2 { margin: 0; font-size: 1.6rem; }
+    .racing-landscape-gate p { margin: 0 0 10px; color: #94a3b8; }
+
+    .racing-landscape-gate button {
+        width: 100%;
+        min-height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #2563eb, #4f46e5);
+        box-shadow: 0 6px 0 #1e3a8a;
+        font-size: 0.86rem;
+        font-weight: 1000;
+    }
+
+    .racing-drive {
+        grid-template-columns: minmax(76px, 0.45fr) minmax(160px, 1fr);
+        grid-template-rows: minmax(210px, 0.9fr) minmax(210px, 1fr);
+        gap: 10px;
+    }
+
+    .racing-wheel-area { grid-column: 1 / 3; grid-row: 1; }
+    .steering-wheel-shell { width: min(60vw, 31vh, 280px); }
+    .racing-gear { grid-column: 1; grid-row: 2; padding: 7px 5px; }
+    .racing-pedals { grid-column: 2; grid-row: 2; }
+    .racing-pedals button { min-height: 0; }
+}
+
+@keyframes rotatePhone {
+    0%, 25% { transform: rotate(0deg); }
+    60%, 100% { transform: rotate(90deg); }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+    .controller-header { min-height: calc(42px + var(--safe-top)); }
+    .game-status p, .control-caption { display: none; }
+    .racing-controller { padding-top: 8px; padding-bottom: calc(8px + var(--safe-bottom)); }
+    .racing-car-preview > span { font-size: 2.8rem; }
+    .racing-car-preview h2 { margin-bottom: 4px; }
 }

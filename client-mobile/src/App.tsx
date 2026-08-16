@@ -35,18 +35,19 @@ function App() {
 
         const urlRoom = new URLSearchParams(window.location.search).get('room');
         const storedRoom = localStorage.getItem('lastRoomId');
-        if (urlRoom) setRoomId(urlRoom);
-        else if (storedRoom) setRoomId(storedRoom);
+        if (urlRoom) setRoomId(urlRoom.replace(/\D/g, '').slice(0, 4));
+        else if (storedRoom) setRoomId(storedRoom.replace(/\D/g, '').slice(0, 4));
     }, []);
 
     // ── Interaction Handlers ──────────────────────────────────────────────────
     const handleJoin = useCallback(() => {
-        if (!socket || !roomId.trim()) return;
+        const pin = roomId.trim();
+        if (!socket || !/^\d{4}$/.test(pin)) return;
         sendMessage(SOCKET_EVENTS.JOIN_ROOM, {
-            roomId: roomId.trim(),
+            roomId: pin,
             profile: { name: 'Player', color: 'blue' },
         });
-        localStorage.setItem('lastRoomId', roomId.trim());
+        localStorage.setItem('lastRoomId', pin);
     }, [socket, roomId, sendMessage]);
 
     const sendInput = useCallback((
@@ -54,7 +55,7 @@ function App() {
         state: 'pressed' | 'released' = 'pressed',
         value = 1,
     ) => {
-        if (state === 'pressed' && navigator.vibrate) navigator.vibrate(25);
+        if (state === 'pressed' && action !== 'STEER' && navigator.vibrate) navigator.vibrate(25);
         sendMessage(SOCKET_EVENTS.GAME_INPUT, { action, state, value, roomId });
     }, [sendMessage, roomId]);
 

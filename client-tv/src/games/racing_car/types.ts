@@ -20,8 +20,8 @@ export interface TrackDefinition {
 export interface RacingInputState {
     accelerate: boolean;
     brake: boolean;
-    left: boolean;
-    right: boolean;
+    steering: number;
+    gear: 1 | -1;
 }
 
 export interface PlayerSelection {

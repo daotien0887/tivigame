@@ -12,20 +12,21 @@ export const FlappyController: React.FC<Props> = ({ onInput, gameState }) => {
     return (
         <div className="controller-layout flappy-controller">
             <div className="game-status">
-                <h3>{isGameOver ? 'GAME OVER' : 'Flappy Bird Mode'}</h3>
-                <p>{isGameOver ? 'Nhấn REPLAY để chơi lại' : 'Chạm vào bất cứ đâu để JUMP!'}</p>
+                <span>FLAPPY BIRD</span>
+                <h3>{isGameOver ? 'KẾT THÚC' : 'SẴN SÀNG BAY'}</h3>
+                <p>{isGameOver ? 'Nhấn để chơi lại' : 'Chạm nút để nhảy'}</p>
             </div>
 
             <div className="jump-zone" onClick={() => onInput(isGameOver ? 'REPLAY' : 'JUMP')}>
                 {isGameOver ? (
-                    <button className="btn-jump replay" style={{ background: '#444' }}>
-                        <RotateCcw size={64} />
-                        <span>REPLAY</span>
+                    <button type="button" className="btn-jump replay">
+                        <RotateCcw />
+                        <span>CHƠI LẠI</span>
                     </button>
                 ) : (
-                    <button className="btn-jump">
-                        <Bird size={64} />
-                        <span>JUMP</span>
+                    <button type="button" className="btn-jump">
+                        <Bird />
+                        <span>NHẢY</span>
                     </button>
                 )}
             </div>

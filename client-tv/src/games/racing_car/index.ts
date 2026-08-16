@@ -160,8 +160,7 @@ export class RacingCar extends GameBase {
             vehicle.disconnected = true;
             vehicle.input.accelerate = false;
             vehicle.input.brake = false;
-            vehicle.input.left = false;
-            vehicle.input.right = false;
+            vehicle.input.steering = 0;
         }
         super.onPlayerLeave(controllerId);
         if (this.phase !== 'racing' && this.phase !== 'countdown') {
@@ -258,8 +257,11 @@ export class RacingCar extends GameBase {
         const active = event.state !== 'released' && event.value !== 0;
         if (event.action === 'ACCELERATE') vehicle.input.accelerate = active;
         else if (event.action === 'BRAKE') vehicle.input.brake = active;
-        else if (event.action === 'STEER_LEFT') vehicle.input.left = active;
-        else if (event.action === 'STEER_RIGHT') vehicle.input.right = active;
+        else if (event.action === 'STEER') vehicle.input.steering = active
+            ? Math.max(-1, Math.min(1, event.value))
+            : 0;
+        else if (event.action === 'GEAR_FORWARD' && event.state === 'pressed') vehicle.input.gear = 1;
+        else if (event.action === 'GEAR_REVERSE' && event.state === 'pressed') vehicle.input.gear = -1;
     }
 
     private updateRaceProgress(now: number, previous: Map<string, number>): void {
@@ -278,8 +280,7 @@ export class RacingCar extends GameBase {
                     vehicle.finishedAt = now - this.raceStartedAt;
                     vehicle.input.accelerate = false;
                     vehicle.input.brake = false;
-                    vehicle.input.left = false;
-                    vehicle.input.right = false;
+                    vehicle.input.steering = 0;
                 }
             }
         });
@@ -369,7 +370,7 @@ export class RacingCar extends GameBase {
                     <strong>P${vehicle.playerIndex} · #${positions.get(vehicle.controllerId)}</strong>
                     <span>Vòng ${Math.min(vehicle.lap + 1, LAPS)}/${LAPS}</span>
                     <span>${this.formatTime(vehicle.finishedAt ?? elapsed)}</span>
-                    <small>${Math.round(Math.abs(vehicle.speed) * 6.5)} km/h</small>
+                    <small>${vehicle.input.gear === 1 ? 'D' : 'R'} · ${Math.round(Math.abs(vehicle.speed) * 6.5)} km/h</small>
                 </div>`).join('')}
             </div>
             ${message ? `<div class="racing-countdown">${message}</div>` : ''}

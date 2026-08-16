@@ -1,7 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const INTERNET_URL = import.meta.env.VITE_SERVER_URL as string;
+function resolveServerUrl(configuredUrl: string): string {
+    const url = new URL(configuredUrl);
+    const openedFromLan = !['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (openedFromLan && ['localhost', '127.0.0.1'].includes(url.hostname)) {
+        url.hostname = window.location.hostname;
+    }
+    return url.origin;
+}
+
+const INTERNET_URL = resolveServerUrl(import.meta.env.VITE_SERVER_URL as string);
 const LAN_TIMEOUT_MS = 2000;
 
 /** Reads ?lan=<ip> embedded in the QR code URL. Returns null if not present. */
