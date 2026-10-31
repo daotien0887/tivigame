@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Enemy animation preview</title></head>
+<body style="margin:0;background:#dce7d7"><canvas width="800" height="440"></canvas><pre id="status">Loading…</pre>
+<script type="module">
+import { ENEMY_DEFINITIONS, ENEMY_TANKS } from '/src/games/tank_typing/EnemyTanks.ts';
+import { TankFactory } from '/src/games/tank_typing/TankFactory.ts';
+import { sprite } from '/src/games/tank_typing/entities/Sprites.ts';
+const id = new URLSearchParams(location.search).get('id');
+const index = ENEMY_DEFINITIONS.findIndex(item => item.id === id);
+try {
+    if (index < 0) throw new Error(`Unknown enemy: ${id}`);
+    const style = ENEMY_TANKS[index];
+    const sources = [...Object.values(style.appearance).filter(part => part.image).map(part => part.image),
+        ...style.weaponDefinitions.flatMap(weapon => [weapon.image, weapon.flashImage, weapon.ammunition.image])];
+    await Promise.all(sources.map(source => new Promise((resolve, reject) => {
+        sprite(source); const image = new Image(); image.onload = resolve; image.onerror = reject; image.src = source;
+    })));
+    for (let i=0; i<200 && !sources.every(source => sprite(source)); i++) await new Promise(resolve => setTimeout(resolve,10));
+    const tank = new TankFactory().createEnemy(index, index, style, 'A');
+    tank.x = 440; tank.y = 310; tank.scale = 1.3; tank.moveTo(-10000);
+    const target = { id: -1, x: -1000, y: 250, health: 1000 };
+    const c = document.querySelector('canvas').getContext('2d');
+    const frames = []; let shots = [];
+    for (let frame = 0; frame < 32; frame++) {
+        if (frame === 4 || frame === 13 || frame === 22 || frame === 31) tank.weapons.forEach(weapon => { if (weapon.isReady) weapon.requestFire(target); });
+        shots.push(...tank.update(1/16, [target]));
+        shots.forEach(shot => shot.update(1/16, target)); shots = shots.filter(shot => !shot.hit && !shot.expired);
+        c.clearRect(0,0,800,440); c.save(); c.translate(440-tank.x,0); tank.render(c); shots.forEach(shot => shot.render(c)); c.restore();
+        frames.push(c.canvas.toDataURL('image/png'));
+    }
+    window.enemyFrames = frames; window.enemyPreviewReady = true;
+    document.querySelector('#status').textContent = `${id}: ${frames.length} frames, ${tank.weapons.length} independent weapons`;
+    let frame = 0;
+    const playback = frames.map(source => { const image = new Image(); image.src = source; return image; });
+    setInterval(() => { const image = playback[frame++ % 32]; if (image.complete) { c.clearRect(0,0,800,440); c.drawImage(image,0,0); } }, 62.5);
+} catch (error) { document.querySelector('#status').textContent = String(error); window.enemyPreviewError = String(error); }
+</script></body></html>

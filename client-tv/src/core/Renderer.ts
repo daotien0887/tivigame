@@ -12,6 +12,8 @@ export class Renderer {
         this._app.innerHTML = `
             <div class="welcome-screen">
                 <h1>TiviGame Hub</h1>
+                <button id="desktop-play" class="desktop-play" type="button" disabled>Chơi trên máy tính</button>
+                <p>Bàn phím và chuột · Không cần kết nối điện thoại</p>
                 <div class="connection-box">
                     <canvas id="qrcode"></canvas>
                     <div class="pin-code">
@@ -33,23 +35,28 @@ export class Renderer {
                     <div class="room-info">Room: ${state.roomId}</div>
                 </header>
                 <main id="game-list">
-                    <div class="game-card focused" data-game="flappy_bird">
+                    <button type="button" class="game-card focused" data-game="flappy_bird">
                         <span class="game-icon">🐦</span>
                         <h3>Flappy Bird</h3>
-                    </div>
-                    <div class="game-card" data-game="gold_miner">
+                    </button>
+                    <button type="button" class="game-card" data-game="gold_miner">
                         <span class="game-icon">⛏️</span>
                         <h3>Gold Miner</h3>
-                    </div>
-                    <div class="game-card" data-game="racing_car">
+                    </button>
+                    <button type="button" class="game-card" data-game="racing_car">
                         <span class="game-icon">🏎️</span>
                         <h3>Racing Car</h3>
-                    </div>
+                    </button>
+                    <button type="button" class="game-card" data-game="tank_typing">
+                        <span class="game-icon">🛡️</span>
+                        <h3>Xe tăng chữ cái</h3>
+                    </button>
                 </main>
                 <footer>
+                    <p>← → chọn game · Enter hoặc nhấp chuột để chơi</p>
                     <div id="players-list">
                         ${state.controllers.map(c =>
-            `<span class="player-tag ${c.isMain ? 'main' : ''}">P${c.playerIndex}</span>`
+            `<span class="player-tag ${c.isMain ? 'main' : ''}">${c.controllerId === 'desktop-local' ? 'PC' : `P${c.playerIndex}`}</span>`
         ).join('')}
                     </div>
                 </footer>
@@ -57,8 +64,15 @@ export class Renderer {
         `;
     }
 
-    public renderInGame(): void {
-        this._app.innerHTML = '<div id="game-container"></div>';
+    public renderInGame(desktop = false, hint = ''): void {
+        this._app.innerHTML = desktop
+            ? `<div class="desktop-game"><div id="game-container"></div>
+                <nav class="desktop-controls" aria-label="Điều khiển máy tính">
+                    <button id="desktop-back" type="button">Về danh sách</button>
+                    <button id="desktop-pause" type="button">Tạm dừng / Tiếp tục</button>
+                    <span>${hint}</span>
+                </nav></div>`
+            : '<div id="game-container"></div>';
     }
 
     public updateRoomInfo(state: TvState): void {
@@ -95,7 +109,9 @@ export class Renderer {
         if (!cards.length) return;
         const currentIdx = cards.findIndex(c => c.classList.contains('focused'));
         cards[currentIdx]?.classList.remove('focused');
-        cards[(currentIdx + dir + cards.length) % cards.length]?.classList.add('focused');
+        const next = cards[(currentIdx + dir + cards.length) % cards.length];
+        next?.classList.add('focused');
+        next?.focus({ preventScroll: true });
     }
 
     public updateStatus(msg: string): void {

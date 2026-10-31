@@ -15,7 +15,7 @@ graph TD
 
     subgraph LAN["🏠  Local Area Network"]
         SERVER["server:3001\n(Socket.IO Relay Server)"]
-        TV["📺  TV Client\nlocalhost:5173"]
+        TV["📺  TV Client\nlocalhost:5175"]
     end
 
     subgraph Mobile["📱  Mobile Devices"]

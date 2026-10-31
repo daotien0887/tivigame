@@ -2,6 +2,7 @@ import { GameBase } from '../games/GameBase';
 import { FlappyBird } from '../games/flappy_bird';
 import { GoldMiner } from '../games/gold_miner';
 import { RacingCar } from '../games/racing_car';
+import { TankTyping } from '../games/tank_typing';
 import type { PlayerSlot } from '../games/types';
 import { SocketClient } from './SocketClient';
 import type { ControllerInfo } from './State';
@@ -17,6 +18,8 @@ const GAME_REGISTRY: Record<string, (
         new FlappyBird(container, exitFn, sc.socket, roomId),
     gold_miner: (container, exitFn, sc, roomId) =>
         new GoldMiner(container, exitFn, sc.socket, roomId),
+    tank_typing: (container, exitFn, sc, roomId) =>
+        new TankTyping(container, exitFn, sc.socket, roomId),
     racing_car: (container, exitFn, sc, roomId) =>
         new RacingCar(container, exitFn, sc.socket, roomId),
 };

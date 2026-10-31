@@ -2,8 +2,19 @@
 # ================================================================
 #  TiviGame — Build Script
 #  Builds TV and Mobile clients for production
-#  Usage: ./build.sh
+#  Usage: ./build.sh [--connect]
 # ================================================================
+
+CONNECT=false
+case "${1:-}" in
+    "") ;;
+    --connect) CONNECT=true ;;
+    *) echo "Usage: ./build.sh [--connect]"; exit 2 ;;
+esac
+if [ "$#" -gt 1 ]; then
+    echo "Usage: ./build.sh [--connect]"
+    exit 2
+fi
 
 # Colors
 RED='\033[0;31m'
@@ -47,6 +58,12 @@ print_step "Installing dependencies..."
 (cd "$ROOT_DIR/client-mobile" && npm install --silent) && print_ok "client-mobile" || { print_fail "client-mobile"; exit 1; }
 
 echo ""
+
+print_step "Checking server JavaScript..."
+for source in "$ROOT_DIR"/server/src/*.js; do
+    node --check "$source" || exit 1
+done
+print_ok "Server checked (runs directly with Node.js)"
 
 # ── 2. Build TV Client ────────────────────────────────────────────
 print_step "Building TV client..."
@@ -94,6 +111,9 @@ if [ $EXIT_TV -eq 0 ] && [ $EXIT_MOBILE -eq 0 ]; then
     echo -e "  ${BOLD}To run the server in production:${RESET}"
     echo -e "    ${CYAN}cd server && npm start${RESET}"
     echo ""
+    if [ "$CONNECT" = true ]; then
+        exec "$ROOT_DIR/production.sh"
+    fi
     exit 0
 else
     echo -e "  ${BOLD}${RED}✘  Build failed after ${ELAPSED}s${RESET}"

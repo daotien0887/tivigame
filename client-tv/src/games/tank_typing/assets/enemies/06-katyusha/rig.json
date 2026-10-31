@@ -1,0 +1,110 @@
+{
+  "id": "06-katyusha",
+  "name": "Tên lửa Katyusha",
+  "color": "#687657",
+  "accent": "#434d49",
+  "health": 6,
+  "scale": 0.86,
+  "moveSpeed": 95,
+  "fireInterval": 4.1,
+  "rig": {
+    "hull": {
+      "x": -120,
+      "y": -34,
+      "width": 280,
+      "height": 64
+    },
+    "turret": {
+      "x": -55,
+      "y": -96,
+      "width": 122,
+      "height": 68
+    },
+    "tracks": {
+      "x": -116,
+      "y": 10,
+      "width": 272,
+      "height": 60
+    },
+    "wheel": {
+      "radius": 16.96,
+      "centers": [
+        -86.0,
+        -50.67,
+        -15.33,
+        20.0,
+        55.33,
+        90.67,
+        126.0
+      ]
+    },
+    "tread": {
+      "count": 54,
+      "width": 12,
+      "height": 8
+    },
+    "trackPath": {
+      "left": -86,
+      "right": 126,
+      "y": 40,
+      "radius": 25
+    }
+  },
+  "ammunition": {
+    "kind": "rocket",
+    "speed": 650,
+    "attack": 3,
+    "defense": 4,
+    "width": 34,
+    "height": 10,
+    "color": "#ffc875"
+  },
+  "weapons": [
+    {
+      "id": "06-katyusha-gun-1",
+      "kind": "rocket",
+      "mount": {
+        "x": -25,
+        "y": -104,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -25.0,
+        "width": 120,
+        "height": 50
+      },
+      "muzzle": {
+        "x": 100,
+        "y": -10.0
+      },
+      "cooldown": 1.6,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "front"
+    },
+    {
+      "id": "06-katyusha-gun-2",
+      "kind": "rocket",
+      "mount": {
+        "x": -25,
+        "y": -138,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -25.0,
+        "width": 120,
+        "height": 50
+      },
+      "muzzle": {
+        "x": 100,
+        "y": -10.0
+      },
+      "cooldown": 1.6,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "front"
+    }
+  ]
+}

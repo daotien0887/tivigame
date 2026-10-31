@@ -4,6 +4,7 @@ import { HubController } from './HubController';
 import { FlappyController } from './FlappyController';
 import { GoldMinerController } from './GoldMinerController';
 import { RacingController } from './RacingController';
+import { TankController } from './TankController';
 
 // ── Controller Props contract ─────────────────────────────────────────────────
 // All controller components must accept this interface.
@@ -27,6 +28,7 @@ const GAME_REGISTRY: Record<string, ControllerComponent> = {
     flappy_bird: FlappyController as ControllerComponent,
     gold_miner: GoldMinerController as ControllerComponent,
     racing_car: RacingController,
+    tank_typing: TankController,
     // soccer:      SoccerController,
 };
 

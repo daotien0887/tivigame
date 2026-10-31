@@ -1,0 +1,157 @@
+{
+  "id": "07-quad",
+  "name": "Pháo bốn nòng",
+  "color": "#62686e",
+  "accent": "#434d49",
+  "health": 10,
+  "scale": 0.94,
+  "moveSpeed": 85,
+  "fireInterval": 3.7,
+  "rig": {
+    "hull": {
+      "x": -120,
+      "y": -55,
+      "width": 300,
+      "height": 85
+    },
+    "turret": {
+      "x": -55,
+      "y": -161,
+      "width": 140,
+      "height": 112
+    },
+    "tracks": {
+      "x": -116,
+      "y": 10,
+      "width": 292,
+      "height": 60
+    },
+    "wheel": {
+      "radius": 15.91,
+      "centers": [
+        -86.0,
+        -52.86,
+        -19.71,
+        13.43,
+        46.57,
+        79.71,
+        112.86,
+        146.0
+      ]
+    },
+    "tread": {
+      "count": 56,
+      "width": 12,
+      "height": 8
+    },
+    "trackPath": {
+      "left": -86,
+      "right": 146,
+      "y": 40,
+      "radius": 25
+    }
+  },
+  "ammunition": {
+    "kind": "shell",
+    "speed": 800,
+    "attack": 3,
+    "defense": 4,
+    "width": 28,
+    "height": 12,
+    "color": "#ffc875"
+  },
+  "weapons": [
+    {
+      "id": "07-quad-gun-1",
+      "kind": "cannon",
+      "mount": {
+        "x": 73,
+        "y": -137,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -9.0,
+        "width": 135,
+        "height": 18
+      },
+      "muzzle": {
+        "x": 127,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    },
+    {
+      "id": "07-quad-gun-2",
+      "kind": "cannon",
+      "mount": {
+        "x": 73,
+        "y": -114,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -9.0,
+        "width": 135,
+        "height": 18
+      },
+      "muzzle": {
+        "x": 127,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    },
+    {
+      "id": "07-quad-gun-3",
+      "kind": "cannon",
+      "mount": {
+        "x": 73,
+        "y": -91,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -9.0,
+        "width": 135,
+        "height": 18
+      },
+      "muzzle": {
+        "x": 127,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    },
+    {
+      "id": "07-quad-gun-4",
+      "kind": "cannon",
+      "mount": {
+        "x": 73,
+        "y": -68,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -9.0,
+        "width": 135,
+        "height": 18
+      },
+      "muzzle": {
+        "x": 127,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>10 xe tăng địch</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 24px; background: #e9eddf; color: #293c35; font-family: system-ui, sans-serif; }
+        h1 { margin: 0 0 24px; font-size: 28px; }
+        main { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        article { overflow: hidden; border-radius: 18px; background: #fffdf2; box-shadow: 0 3px 12px #293c3518; }
+        img { display: block; width: 100%; aspect-ratio: 800 / 440; object-fit: contain; background: #d8e3ce; }
+        h2 { margin: 16px 20px 8px; font-size: 20px; }
+        p { margin: 0 20px 16px; line-height: 1.7; }
+        a { display: inline-block; margin: 0 20px 20px; color: #426c35; }
+    </style>
+</head>
+<body>
+    <h1>10 xe tăng địch · Sprite & animation</h1>
+    <p><a href="aircraft-gallery.html">Xem máy bay và bộ đạn mới</a></p>
+    <main></main>
+    <script type="module">
+        import { ENEMY_DEFINITIONS } from '/src/games/tank_typing/EnemyTanks.ts';
+        const animations = import.meta.glob('/src/games/tank_typing/assets/enemies/*/animation.gif', { eager: true, import: 'default' });
+        const labels = { cannon: 'Pháo', rotary: 'Gatling', mortar: 'Súng cối', rocket: 'Tên lửa', plasma: 'Plasma' };
+        for (const [index, tank] of ENEMY_DEFINITIONS.entries()) {
+            const card = document.createElement('article');
+            const image = new Image(); image.src = animations[`/src/games/tank_typing/assets/enemies/${tank.id}/animation.gif`]; image.alt = tank.name;
+            const heading = document.createElement('h2'); heading.textContent = `${index + 1}. ${tank.name}`;
+            const stats = document.createElement('p');
+            stats.textContent = `Độ bền ${tank.health} · ${tank.weapons.length} súng ${labels[tank.weapons[0].kind]} · Công ${tank.ammunition.attack} / Thủ đạn ${tank.ammunition.defense} · Tốc độ ${tank.moveSpeed}`;
+            const link = document.createElement('a'); link.href = `enemy-preview.html?id=${tank.id}`; link.textContent = 'Xem animation riêng';
+            card.append(image, heading, stats, link); document.querySelector('main').append(card);
+        }
+    </script>
+</body>
+</html>

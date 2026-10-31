@@ -1,0 +1,158 @@
+{
+  "id": "10-colossus",
+  "name": "Pháo đài khổng lồ",
+  "color": "#5b6757",
+  "accent": "#434d49",
+  "health": 16,
+  "scale": 1.0,
+  "moveSpeed": 65,
+  "fireInterval": 4.7,
+  "rig": {
+    "hull": {
+      "x": -120,
+      "y": -80,
+      "width": 330,
+      "height": 110
+    },
+    "turret": {
+      "x": -55,
+      "y": -189,
+      "width": 150,
+      "height": 115
+    },
+    "tracks": {
+      "x": -116,
+      "y": 10,
+      "width": 322,
+      "height": 60
+    },
+    "wheel": {
+      "radius": 15.72,
+      "centers": [
+        -86.0,
+        -53.25,
+        -20.5,
+        12.25,
+        45.0,
+        77.75,
+        110.5,
+        143.25,
+        176.0
+      ]
+    },
+    "tread": {
+      "count": 62,
+      "width": 12,
+      "height": 8
+    },
+    "trackPath": {
+      "left": -86,
+      "right": 176,
+      "y": 40,
+      "radius": 25
+    }
+  },
+  "ammunition": {
+    "kind": "shell",
+    "speed": 700,
+    "attack": 5,
+    "defense": 7,
+    "width": 34,
+    "height": 11,
+    "color": "#ffc875"
+  },
+  "weapons": [
+    {
+      "id": "10-colossus-gun-1",
+      "kind": "cannon",
+      "mount": {
+        "x": 83,
+        "y": -149.9,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -12.5,
+        "width": 150,
+        "height": 25
+      },
+      "muzzle": {
+        "x": 142,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    },
+    {
+      "id": "10-colossus-gun-2",
+      "kind": "cannon",
+      "mount": {
+        "x": 83,
+        "y": -106.2,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -12.5,
+        "width": 150,
+        "height": 25
+      },
+      "muzzle": {
+        "x": 142,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    },
+    {
+      "id": "10-colossus-gun-3",
+      "kind": "cannon",
+      "mount": {
+        "x": 90,
+        "y": -58,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -12.5,
+        "width": 150,
+        "height": 25
+      },
+      "muzzle": {
+        "x": 142,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    },
+    {
+      "id": "10-colossus-gun-4",
+      "kind": "cannon",
+      "mount": {
+        "x": 90,
+        "y": -23,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -12.5,
+        "width": 150,
+        "height": 25
+      },
+      "muzzle": {
+        "x": 142,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    }
+  ]
+}

@@ -91,7 +91,7 @@ class RoomManager {
         const controller = { socketId, isMain, playerIndex, profile };
 
         room.controllers.push(controller);
-        if (isMain) room.appState = 'hub_ready';
+        if (isMain && room.appState === 'connecting') room.appState = 'hub_ready';
 
         return controller;
     }

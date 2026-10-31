@@ -1,0 +1,60 @@
+{
+  "frames": {
+    "hull": {
+      "x": 20,
+      "y": 85,
+      "width": 980,
+      "height": 220,
+      "flip": true
+    },
+    "turret": {
+      "x": 1010,
+      "y": 70,
+      "width": 490,
+      "height": 245,
+      "flip": true
+    },
+    "weapon": {
+      "x": 115,
+      "y": 315,
+      "width": 575,
+      "height": 270,
+      "flip": false
+    },
+    "tracks": {
+      "x": 745,
+      "y": 350,
+      "width": 765,
+      "height": 245,
+      "flip": false
+    },
+    "wheel": {
+      "x": 280,
+      "y": 580,
+      "width": 245,
+      "height": 245,
+      "flip": false
+    },
+    "tread": {
+      "x": 920,
+      "y": 640,
+      "width": 325,
+      "height": 155,
+      "flip": false
+    },
+    "ammo": {
+      "x": 175,
+      "y": 840,
+      "width": 515,
+      "height": 145,
+      "flip": false
+    },
+    "flash": {
+      "x": 855,
+      "y": 805,
+      "width": 535,
+      "height": 200,
+      "flip": false
+    }
+  }
+}

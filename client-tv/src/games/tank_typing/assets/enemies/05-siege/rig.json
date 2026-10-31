@@ -1,0 +1,87 @@
+{
+  "id": "05-siege",
+  "name": "Cối công thành",
+  "color": "#6b6c58",
+  "accent": "#434d49",
+  "health": 7,
+  "scale": 0.9,
+  "moveSpeed": 75,
+  "fireInterval": 4.5,
+  "rig": {
+    "hull": {
+      "x": -120,
+      "y": -52,
+      "width": 280,
+      "height": 82
+    },
+    "turret": {
+      "x": -55,
+      "y": -136,
+      "width": 132,
+      "height": 90
+    },
+    "tracks": {
+      "x": -116,
+      "y": 10,
+      "width": 272,
+      "height": 60
+    },
+    "wheel": {
+      "radius": 16.96,
+      "centers": [
+        -86.0,
+        -50.67,
+        -15.33,
+        20.0,
+        55.33,
+        90.67,
+        126.0
+      ]
+    },
+    "tread": {
+      "count": 52,
+      "width": 12,
+      "height": 8
+    },
+    "trackPath": {
+      "left": -86,
+      "right": 126,
+      "y": 40,
+      "radius": 25
+    }
+  },
+  "ammunition": {
+    "kind": "mortar-bomb",
+    "speed": 500,
+    "attack": 5,
+    "defense": 6,
+    "width": 27,
+    "height": 13,
+    "color": "#ffc875"
+  },
+  "weapons": [
+    {
+      "id": "05-siege-gun-1",
+      "kind": "mortar",
+      "mount": {
+        "x": 65,
+        "y": -87.4,
+        "angle": -0.7
+      },
+      "bounds": {
+        "x": -8,
+        "y": -25.0,
+        "width": 90,
+        "height": 50
+      },
+      "muzzle": {
+        "x": 82,
+        "y": 0
+      },
+      "cooldown": 2.2,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    }
+  ]
+}

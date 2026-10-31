@@ -106,7 +106,7 @@ export const RacingController: React.FC<ControllerProps> = ({
         if (delta < -180) delta += 360;
         const rotation = Math.max(-120, Math.min(120, gesture.startRotation + delta));
         setWheelRotation(rotation);
-        onInput('STEER', 'pressed', rotation / 120);
+        onInput('STEER', 'pressed', -rotation / 120);
     };
 
     const changeGear = (next: 'forward' | 'reverse') => {

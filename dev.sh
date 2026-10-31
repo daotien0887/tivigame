@@ -26,7 +26,7 @@ echo -e "${BOLD}${CYAN}     ╚═╝   ╚═╝  ╚═══╝  ╚═╝ �
 echo ""
 echo -e "${BOLD}  🎮  DEV MODE${RESET}"
 echo -e "  Server  →  ${GREEN}http://localhost:3001${RESET}"
-echo -e "  TV      →  ${YELLOW}http://localhost:5173${RESET}"
+echo -e "  TV      →  ${YELLOW}http://localhost:5175${RESET}"
 echo -e "  Mobile  →  ${BLUE}http://localhost:5174${RESET}"
 echo ""
 echo -e "  Press ${RED}Ctrl+C${RESET} to stop all services"
@@ -48,7 +48,7 @@ kill_port() {
 # Pre-flight: Clean up existing processes on our target ports
 echo -e "${CYAN}[system]${RESET}  Cleaning up ports..."
 kill_port 3001
-kill_port 5173
+kill_port 5175
 kill_port 5174
 echo ""
 echo ""

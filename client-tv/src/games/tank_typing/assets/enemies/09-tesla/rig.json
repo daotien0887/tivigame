@@ -1,0 +1,88 @@
+{
+  "id": "09-tesla",
+  "name": "Pháo plasma",
+  "color": "#586b70",
+  "accent": "#434d49",
+  "health": 9,
+  "scale": 0.91,
+  "moveSpeed": 110,
+  "fireInterval": 3.4,
+  "rig": {
+    "hull": {
+      "x": -120,
+      "y": -45,
+      "width": 290,
+      "height": 75
+    },
+    "turret": {
+      "x": -55,
+      "y": -129,
+      "width": 135,
+      "height": 90
+    },
+    "tracks": {
+      "x": -116,
+      "y": 10,
+      "width": 282,
+      "height": 60
+    },
+    "wheel": {
+      "radius": 15.22,
+      "centers": [
+        -86.0,
+        -54.29,
+        -22.57,
+        9.14,
+        40.86,
+        72.57,
+        104.29,
+        136.0
+      ]
+    },
+    "tread": {
+      "count": 60,
+      "width": 12,
+      "height": 8
+    },
+    "trackPath": {
+      "left": -86,
+      "right": 136,
+      "y": 40,
+      "radius": 25
+    }
+  },
+  "ammunition": {
+    "kind": "plasma",
+    "speed": 1350,
+    "attack": 3,
+    "defense": 3,
+    "width": 30,
+    "height": 11,
+    "color": "#8be8f0"
+  },
+  "weapons": [
+    {
+      "id": "09-tesla-gun-1",
+      "kind": "plasma",
+      "mount": {
+        "x": 68,
+        "y": -80.4,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -16.0,
+        "width": 150,
+        "height": 32
+      },
+      "muzzle": {
+        "x": 142,
+        "y": 0
+      },
+      "cooldown": 0.55,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    }
+  ]
+}

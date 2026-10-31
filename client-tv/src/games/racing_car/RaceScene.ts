@@ -22,14 +22,17 @@ export class RaceScene {
         this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
         this.renderer.setSize(container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight);
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.05;
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.autoClear = false;
         this.renderer.domElement.className = 'racing-canvas';
         container.appendChild(this.renderer.domElement);
 
-        this.scene.add(new THREE.HemisphereLight(0xffffff, 0x34451f, 2.1));
-        const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+        this.scene.add(new THREE.HemisphereLight(0xdbeafe, 0x34451f, 1.65));
+        const sun = new THREE.DirectionalLight(0xfff7ed, 3.15);
         sun.position.set(-45, 70, -25);
         sun.castShadow = true;
         sun.shadow.mapSize.set(1024, 1024);
@@ -39,7 +42,7 @@ export class RaceScene {
         sun.shadow.camera.bottom = -110;
         this.scene.add(sun);
 
-        this.previewCamera.position.set(0, 105, 100);
+        this.previewCamera.position.set(0, 92, 108);
         this.previewCamera.lookAt(0, 0, 0);
         this.track = new Track(definition);
         this.scene.add(this.track.group);
@@ -135,10 +138,10 @@ export class RaceScene {
     private updateCamera(camera: THREE.PerspectiveCamera, vehicle: Vehicle, aspect: number): void {
         const forward = new THREE.Vector3(Math.sin(vehicle.heading), 0, Math.cos(vehicle.heading));
         const targetPosition = vehicle.object.position.clone()
-            .addScaledVector(forward, -10.5)
-            .add(new THREE.Vector3(0, 6.3, 0));
+            .addScaledVector(forward, -11.8)
+            .add(new THREE.Vector3(0, 5.4, 0));
         camera.position.lerp(targetPosition, 0.16);
-        camera.lookAt(vehicle.object.position.clone().addScaledVector(forward, 6).add(new THREE.Vector3(0, 1.2, 0)));
+        camera.lookAt(vehicle.object.position.clone().addScaledVector(forward, 7.5).add(new THREE.Vector3(0, 1.15, 0)));
         camera.aspect = aspect;
         camera.updateProjectionMatrix();
     }

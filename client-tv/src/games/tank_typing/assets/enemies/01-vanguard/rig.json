@@ -1,0 +1,85 @@
+{
+  "id": "01-vanguard",
+  "name": "Thiết giáp nhẹ",
+  "color": "#69735b",
+  "accent": "#434d49",
+  "health": 2,
+  "scale": 0.78,
+  "moveSpeed": 155,
+  "fireInterval": 3.2,
+  "rig": {
+    "hull": {
+      "x": -120,
+      "y": -30,
+      "width": 240,
+      "height": 60
+    },
+    "turret": {
+      "x": -55,
+      "y": -94,
+      "width": 110,
+      "height": 70
+    },
+    "tracks": {
+      "x": -116,
+      "y": 10,
+      "width": 232,
+      "height": 60
+    },
+    "wheel": {
+      "radius": 20.64,
+      "centers": [
+        -86.0,
+        -43.0,
+        0.0,
+        43.0,
+        86.0
+      ]
+    },
+    "tread": {
+      "count": 44,
+      "width": 12,
+      "height": 8
+    },
+    "trackPath": {
+      "left": -86,
+      "right": 86,
+      "y": 40,
+      "radius": 25
+    }
+  },
+  "ammunition": {
+    "kind": "shell",
+    "speed": 760,
+    "attack": 1,
+    "defense": 2,
+    "width": 25,
+    "height": 10,
+    "color": "#ffc875"
+  },
+  "weapons": [
+    {
+      "id": "01-vanguard-gun-1",
+      "kind": "cannon",
+      "mount": {
+        "x": 43,
+        "y": -56.2,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -12.5,
+        "width": 112,
+        "height": 25
+      },
+      "muzzle": {
+        "x": 104,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    }
+  ]
+}

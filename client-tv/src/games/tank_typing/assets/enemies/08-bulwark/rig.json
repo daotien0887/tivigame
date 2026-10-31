@@ -1,0 +1,111 @@
+{
+  "id": "08-bulwark",
+  "name": "Thiết giáp ủi",
+  "color": "#777263",
+  "accent": "#434d49",
+  "health": 12,
+  "scale": 0.96,
+  "moveSpeed": 70,
+  "fireInterval": 4.0,
+  "rig": {
+    "hull": {
+      "x": -120,
+      "y": -65,
+      "width": 310,
+      "height": 95
+    },
+    "turret": {
+      "x": -55,
+      "y": -149,
+      "width": 140,
+      "height": 90
+    },
+    "tracks": {
+      "x": -116,
+      "y": 10,
+      "width": 302,
+      "height": 60
+    },
+    "wheel": {
+      "radius": 16.59,
+      "centers": [
+        -86.0,
+        -51.43,
+        -16.86,
+        17.71,
+        52.29,
+        86.86,
+        121.43,
+        156.0
+      ]
+    },
+    "tread": {
+      "count": 58,
+      "width": 12,
+      "height": 8
+    },
+    "trackPath": {
+      "left": -86,
+      "right": 156,
+      "y": 40,
+      "radius": 25
+    }
+  },
+  "ammunition": {
+    "kind": "shell",
+    "speed": 720,
+    "attack": 4,
+    "defense": 5,
+    "width": 26,
+    "height": 13,
+    "color": "#ffc875"
+  },
+  "weapons": [
+    {
+      "id": "08-bulwark-gun-1",
+      "kind": "cannon",
+      "mount": {
+        "x": 73,
+        "y": -111.2,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -15.0,
+        "width": 132,
+        "height": 30
+      },
+      "muzzle": {
+        "x": 124,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    },
+    {
+      "id": "08-bulwark-gun-2",
+      "kind": "cannon",
+      "mount": {
+        "x": 73,
+        "y": -79.7,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -15.0,
+        "width": 132,
+        "height": 30
+      },
+      "muzzle": {
+        "x": 124,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    }
+  ]
+}

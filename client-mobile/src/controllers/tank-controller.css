@@ -1,0 +1,74 @@
+.controller-layout.tank-controller {
+    width: 100%;
+    min-height: 0;
+    flex: 1;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 6px calc(6px + var(--safe-right)) calc(6px + var(--safe-bottom)) calc(6px + var(--safe-left));
+    text-align: center;
+}
+.tank-controller h2 { color: #c9e77c; margin: 0; }
+.tank-controller p { margin: 0; }
+.tank-status {
+    width: 100%;
+    min-height: 46px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 20px;
+}
+.tank-drive {
+    width: clamp(54px, 14vw, 82px);
+    height: 44px;
+    flex-shrink: 0;
+    border: 0;
+    border-bottom: 4px solid #96b05c;
+    border-radius: 11px;
+    background: #e5f3b2;
+    color: #263e31;
+    font-size: 22px;
+    font-weight: 900;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.tank-drive:active { transform: translateY(2px); background: #b7da72; }
+.tank-drive:disabled { opacity: 0.4; }
+.tank-keyboard {
+    width: 100%;
+    min-height: 0;
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+}
+.tank-key-row { display: contents; }
+.tank-key-row button, .tank-start {
+    color: #263e31;
+    background: #e5f3b2;
+    border: 0;
+    border-bottom: 4px solid #96b05c;
+    border-radius: 12px;
+    font-size: clamp(24px, 5vmin, 42px);
+    font-weight: 800;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.tank-key-row button { width: 100%; min-width: 0; min-height: 0; padding: 0; }
+.tank-key-row button:active { transform: translateY(2px); background: #b7da72; }
+.tank-key-row button:disabled { opacity: 0.4; }
+.tank-start { padding: 16px 32px; margin: auto; min-height: 56px; }
+
+@media (orientation: landscape) {
+    .tank-keyboard {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: repeat(3, minmax(0, 1fr));
+    }
+    .tank-key-row { display: flex; justify-content: center; gap: 6px; min-height: 0; }
+    .tank-key-row button { width: calc((100% - 54px) / 10); }
+}

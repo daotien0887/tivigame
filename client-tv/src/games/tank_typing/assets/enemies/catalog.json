@@ -1,0 +1,1080 @@
+[
+  {
+    "id": "01-vanguard",
+    "name": "Thiết giáp nhẹ",
+    "color": "#69735b",
+    "accent": "#434d49",
+    "health": 2,
+    "scale": 0.78,
+    "moveSpeed": 155,
+    "fireInterval": 3.2,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -30,
+        "width": 240,
+        "height": 60
+      },
+      "turret": {
+        "x": -55,
+        "y": -94,
+        "width": 110,
+        "height": 70
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 232,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 20.64,
+        "centers": [
+          -86.0,
+          -43.0,
+          0.0,
+          43.0,
+          86.0
+        ]
+      },
+      "tread": {
+        "count": 44,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 86,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "shell",
+      "speed": 760,
+      "attack": 1,
+      "defense": 2,
+      "width": 25,
+      "height": 10,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "01-vanguard-gun-1",
+        "kind": "cannon",
+        "mount": {
+          "x": 43,
+          "y": -56.2,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -12.5,
+          "width": 112,
+          "height": 25
+        },
+        "muzzle": {
+          "x": 104,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  },
+  {
+    "id": "02-longshot",
+    "name": "Pháo tầm xa",
+    "color": "#637268",
+    "accent": "#434d49",
+    "health": 3,
+    "scale": 0.8,
+    "moveSpeed": 115,
+    "fireInterval": 3.9,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -28,
+        "width": 250,
+        "height": 58
+      },
+      "turret": {
+        "x": -55,
+        "y": -87,
+        "width": 115,
+        "height": 65
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 242,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 17.47,
+        "centers": [
+          -86.0,
+          -49.6,
+          -13.2,
+          23.2,
+          59.6,
+          96.0
+        ]
+      },
+      "tread": {
+        "count": 46,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 96,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "shell",
+      "speed": 900,
+      "attack": 3,
+      "defense": 3,
+      "width": 32,
+      "height": 7,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "02-longshot-gun-1",
+        "kind": "cannon",
+        "mount": {
+          "x": 48,
+          "y": -51.9,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -11.5,
+          "width": 165,
+          "height": 23
+        },
+        "muzzle": {
+          "x": 157,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  },
+  {
+    "id": "03-rotor",
+    "name": "Gatling xung kích",
+    "color": "#575e62",
+    "accent": "#434d49",
+    "health": 4,
+    "scale": 0.83,
+    "moveSpeed": 140,
+    "fireInterval": 2.1,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -38,
+        "width": 250,
+        "height": 68
+      },
+      "turret": {
+        "x": -55,
+        "y": -110,
+        "width": 120,
+        "height": 78
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 242,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 17.47,
+        "centers": [
+          -86.0,
+          -49.6,
+          -13.2,
+          23.2,
+          59.6,
+          96.0
+        ]
+      },
+      "tread": {
+        "count": 48,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 96,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "bullet",
+      "speed": 1100,
+      "attack": 1,
+      "defense": 1,
+      "width": 18,
+      "height": 8,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "03-rotor-gun-1",
+        "kind": "rotary",
+        "mount": {
+          "x": 53,
+          "y": -67.88,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -17.0,
+          "width": 100,
+          "height": 34
+        },
+        "muzzle": {
+          "x": 92,
+          "y": 0
+        },
+        "cooldown": 0.08,
+        "recoil": 3,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  },
+  {
+    "id": "04-twin",
+    "name": "Pháo đôi",
+    "color": "#747c60",
+    "accent": "#434d49",
+    "health": 6,
+    "scale": 0.88,
+    "moveSpeed": 105,
+    "fireInterval": 3.1,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -40,
+        "width": 270,
+        "height": 70
+      },
+      "turret": {
+        "x": -55,
+        "y": -122,
+        "width": 130,
+        "height": 88
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 262,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 16.16,
+        "centers": [
+          -86.0,
+          -52.33,
+          -18.67,
+          15.0,
+          48.67,
+          82.33,
+          116.0
+        ]
+      },
+      "tread": {
+        "count": 50,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 116,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "shell",
+      "speed": 780,
+      "attack": 2,
+      "defense": 3,
+      "width": 27,
+      "height": 10,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "04-twin-gun-1",
+        "kind": "cannon",
+        "mount": {
+          "x": 63,
+          "y": -90.32,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -12.0,
+          "width": 132,
+          "height": 24
+        },
+        "muzzle": {
+          "x": 124,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      },
+      {
+        "id": "04-twin-gun-2",
+        "kind": "cannon",
+        "mount": {
+          "x": 63,
+          "y": -57.76,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -12.0,
+          "width": 132,
+          "height": 24
+        },
+        "muzzle": {
+          "x": 124,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  },
+  {
+    "id": "05-siege",
+    "name": "Cối công thành",
+    "color": "#6b6c58",
+    "accent": "#434d49",
+    "health": 7,
+    "scale": 0.9,
+    "moveSpeed": 75,
+    "fireInterval": 4.5,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -52,
+        "width": 280,
+        "height": 82
+      },
+      "turret": {
+        "x": -55,
+        "y": -136,
+        "width": 132,
+        "height": 90
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 272,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 16.96,
+        "centers": [
+          -86.0,
+          -50.67,
+          -15.33,
+          20.0,
+          55.33,
+          90.67,
+          126.0
+        ]
+      },
+      "tread": {
+        "count": 52,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 126,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "mortar-bomb",
+      "speed": 500,
+      "attack": 5,
+      "defense": 6,
+      "width": 27,
+      "height": 13,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "05-siege-gun-1",
+        "kind": "mortar",
+        "mount": {
+          "x": 65,
+          "y": -87.4,
+          "angle": -0.7
+        },
+        "bounds": {
+          "x": -8,
+          "y": -25.0,
+          "width": 90,
+          "height": 50
+        },
+        "muzzle": {
+          "x": 82,
+          "y": 0
+        },
+        "cooldown": 2.2,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  },
+  {
+    "id": "06-katyusha",
+    "name": "Tên lửa Katyusha",
+    "color": "#687657",
+    "accent": "#434d49",
+    "health": 6,
+    "scale": 0.86,
+    "moveSpeed": 95,
+    "fireInterval": 4.1,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -34,
+        "width": 280,
+        "height": 64
+      },
+      "turret": {
+        "x": -55,
+        "y": -96,
+        "width": 122,
+        "height": 68
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 272,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 16.96,
+        "centers": [
+          -86.0,
+          -50.67,
+          -15.33,
+          20.0,
+          55.33,
+          90.67,
+          126.0
+        ]
+      },
+      "tread": {
+        "count": 54,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 126,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "rocket",
+      "speed": 650,
+      "attack": 3,
+      "defense": 4,
+      "width": 34,
+      "height": 10,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "06-katyusha-gun-1",
+        "kind": "rocket",
+        "mount": {
+          "x": -25,
+          "y": -104,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -25.0,
+          "width": 120,
+          "height": 50
+        },
+        "muzzle": {
+          "x": 100,
+          "y": -10.0
+        },
+        "cooldown": 1.6,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "front"
+      },
+      {
+        "id": "06-katyusha-gun-2",
+        "kind": "rocket",
+        "mount": {
+          "x": -25,
+          "y": -138,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -25.0,
+          "width": 120,
+          "height": 50
+        },
+        "muzzle": {
+          "x": 100,
+          "y": -10.0
+        },
+        "cooldown": 1.6,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "front"
+      }
+    ]
+  },
+  {
+    "id": "07-quad",
+    "name": "Pháo bốn nòng",
+    "color": "#62686e",
+    "accent": "#434d49",
+    "health": 10,
+    "scale": 0.94,
+    "moveSpeed": 85,
+    "fireInterval": 3.7,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -55,
+        "width": 300,
+        "height": 85
+      },
+      "turret": {
+        "x": -55,
+        "y": -161,
+        "width": 140,
+        "height": 112
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 292,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 15.91,
+        "centers": [
+          -86.0,
+          -52.86,
+          -19.71,
+          13.43,
+          46.57,
+          79.71,
+          112.86,
+          146.0
+        ]
+      },
+      "tread": {
+        "count": 56,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 146,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "shell",
+      "speed": 800,
+      "attack": 3,
+      "defense": 4,
+      "width": 28,
+      "height": 12,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "07-quad-gun-1",
+        "kind": "cannon",
+        "mount": {
+          "x": 73,
+          "y": -137,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -9.0,
+          "width": 135,
+          "height": 18
+        },
+        "muzzle": {
+          "x": 127,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      },
+      {
+        "id": "07-quad-gun-2",
+        "kind": "cannon",
+        "mount": {
+          "x": 73,
+          "y": -114,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -9.0,
+          "width": 135,
+          "height": 18
+        },
+        "muzzle": {
+          "x": 127,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      },
+      {
+        "id": "07-quad-gun-3",
+        "kind": "cannon",
+        "mount": {
+          "x": 73,
+          "y": -91,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -9.0,
+          "width": 135,
+          "height": 18
+        },
+        "muzzle": {
+          "x": 127,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      },
+      {
+        "id": "07-quad-gun-4",
+        "kind": "cannon",
+        "mount": {
+          "x": 73,
+          "y": -68,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -9.0,
+          "width": 135,
+          "height": 18
+        },
+        "muzzle": {
+          "x": 127,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  },
+  {
+    "id": "08-bulwark",
+    "name": "Thiết giáp ủi",
+    "color": "#777263",
+    "accent": "#434d49",
+    "health": 12,
+    "scale": 0.96,
+    "moveSpeed": 70,
+    "fireInterval": 4.0,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -65,
+        "width": 310,
+        "height": 95
+      },
+      "turret": {
+        "x": -55,
+        "y": -149,
+        "width": 140,
+        "height": 90
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 302,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 16.59,
+        "centers": [
+          -86.0,
+          -51.43,
+          -16.86,
+          17.71,
+          52.29,
+          86.86,
+          121.43,
+          156.0
+        ]
+      },
+      "tread": {
+        "count": 58,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 156,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "shell",
+      "speed": 720,
+      "attack": 4,
+      "defense": 5,
+      "width": 26,
+      "height": 13,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "08-bulwark-gun-1",
+        "kind": "cannon",
+        "mount": {
+          "x": 73,
+          "y": -111.2,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -15.0,
+          "width": 132,
+          "height": 30
+        },
+        "muzzle": {
+          "x": 124,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      },
+      {
+        "id": "08-bulwark-gun-2",
+        "kind": "cannon",
+        "mount": {
+          "x": 73,
+          "y": -79.7,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -15.0,
+          "width": 132,
+          "height": 30
+        },
+        "muzzle": {
+          "x": 124,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  },
+  {
+    "id": "09-tesla",
+    "name": "Pháo plasma",
+    "color": "#586b70",
+    "accent": "#434d49",
+    "health": 9,
+    "scale": 0.91,
+    "moveSpeed": 110,
+    "fireInterval": 3.4,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -45,
+        "width": 290,
+        "height": 75
+      },
+      "turret": {
+        "x": -55,
+        "y": -129,
+        "width": 135,
+        "height": 90
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 282,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 15.22,
+        "centers": [
+          -86.0,
+          -54.29,
+          -22.57,
+          9.14,
+          40.86,
+          72.57,
+          104.29,
+          136.0
+        ]
+      },
+      "tread": {
+        "count": 60,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 136,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "plasma",
+      "speed": 1350,
+      "attack": 3,
+      "defense": 3,
+      "width": 30,
+      "height": 11,
+      "color": "#8be8f0"
+    },
+    "weapons": [
+      {
+        "id": "09-tesla-gun-1",
+        "kind": "plasma",
+        "mount": {
+          "x": 68,
+          "y": -80.4,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -16.0,
+          "width": 150,
+          "height": 32
+        },
+        "muzzle": {
+          "x": 142,
+          "y": 0
+        },
+        "cooldown": 0.55,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  },
+  {
+    "id": "10-colossus",
+    "name": "Pháo đài khổng lồ",
+    "color": "#5b6757",
+    "accent": "#434d49",
+    "health": 16,
+    "scale": 1.0,
+    "moveSpeed": 65,
+    "fireInterval": 4.7,
+    "rig": {
+      "hull": {
+        "x": -120,
+        "y": -80,
+        "width": 330,
+        "height": 110
+      },
+      "turret": {
+        "x": -55,
+        "y": -189,
+        "width": 150,
+        "height": 115
+      },
+      "tracks": {
+        "x": -116,
+        "y": 10,
+        "width": 322,
+        "height": 60
+      },
+      "wheel": {
+        "radius": 15.72,
+        "centers": [
+          -86.0,
+          -53.25,
+          -20.5,
+          12.25,
+          45.0,
+          77.75,
+          110.5,
+          143.25,
+          176.0
+        ]
+      },
+      "tread": {
+        "count": 62,
+        "width": 12,
+        "height": 8
+      },
+      "trackPath": {
+        "left": -86,
+        "right": 176,
+        "y": 40,
+        "radius": 25
+      }
+    },
+    "ammunition": {
+      "kind": "shell",
+      "speed": 700,
+      "attack": 5,
+      "defense": 7,
+      "width": 34,
+      "height": 11,
+      "color": "#ffc875"
+    },
+    "weapons": [
+      {
+        "id": "10-colossus-gun-1",
+        "kind": "cannon",
+        "mount": {
+          "x": 83,
+          "y": -149.9,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -12.5,
+          "width": 150,
+          "height": 25
+        },
+        "muzzle": {
+          "x": 142,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      },
+      {
+        "id": "10-colossus-gun-2",
+        "kind": "cannon",
+        "mount": {
+          "x": 83,
+          "y": -106.2,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -12.5,
+          "width": 150,
+          "height": 25
+        },
+        "muzzle": {
+          "x": 142,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      },
+      {
+        "id": "10-colossus-gun-3",
+        "kind": "cannon",
+        "mount": {
+          "x": 90,
+          "y": -58,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -12.5,
+          "width": 150,
+          "height": 25
+        },
+        "muzzle": {
+          "x": 142,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      },
+      {
+        "id": "10-colossus-gun-4",
+        "kind": "cannon",
+        "mount": {
+          "x": 90,
+          "y": -23,
+          "angle": 0
+        },
+        "bounds": {
+          "x": -8,
+          "y": -12.5,
+          "width": 150,
+          "height": 25
+        },
+        "muzzle": {
+          "x": 142,
+          "y": 0
+        },
+        "cooldown": 0.65,
+        "recoil": 8,
+        "maxAim": 0.45,
+        "layer": "rear"
+      }
+    ]
+  }
+]

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Máy bay và đạn địch</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 24px; background: #e9eddf; color: #293c35; font-family: system-ui, sans-serif; }
+        h1, h2 { margin: 0 0 20px; }
+        h2 { margin-top: 32px; }
+        section { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+        article { overflow: hidden; border-radius: 16px; background: #fffdf2; }
+        canvas { display: block; width: 100%; background: #d8e3ce; }
+        h3, p { margin: 12px 18px; }
+        p { margin-bottom: 18px; }
+        #ammunition { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        #ammunition img { display: block; width: 100%; height: 100px; padding: 20px; object-fit: contain; background: #d8e3ce; }
+        a { color: #426c35; }
+    </style>
+</head>
+<body>
+    <h1>Máy bay và đạn địch</h1>
+    <section id="aircraft"></section>
+    <h2>10 loại đạn xe tăng</h2>
+    <section id="ammunition"></section>
+    <p><a href="enemy-gallery.html">Xem bộ 10 xe tăng</a></p>
+    <script type="module">
+        import { ENEMY_AIRCRAFT, renderAircraft } from '/src/games/tank_typing/EnemyAircraft.ts';
+        import { ENEMY_TANKS } from '/src/games/tank_typing/EnemyTanks.ts';
+        import { sprite } from '/src/games/tank_typing/entities/Sprites.ts';
+        const sources = ENEMY_AIRCRAFT.flatMap(type => [type.body.image, type.ammunition.image, ...type.moving.map(part => part.image)]);
+        await Promise.all(sources.map(source => new Promise((resolve, reject) => {
+            sprite(source); const image = new Image(); image.onload = resolve; image.onerror = reject; image.src = source;
+        })));
+        const previews = ENEMY_AIRCRAFT.map((type, variant) => {
+            const card = document.createElement('article'), canvas = document.createElement('canvas');
+            canvas.width = 440; canvas.height = 240;
+            const heading = document.createElement('h3'); heading.textContent = type.name;
+            const text = document.createElement('p'); text.textContent = `Tốc độ ${type.speed} · Bom riêng · Công ${type.ammunition.attack} / Thủ ${type.ammunition.defense}`;
+            card.append(canvas, heading, text); document.querySelector('#aircraft').append(card);
+            return { c: canvas.getContext('2d'), plane: { id: variant, variant, x: 175, y: 125 }, type };
+        });
+        ENEMY_TANKS.forEach(type => {
+            const card = document.createElement('article'), image = new Image(), heading = document.createElement('h3'), text = document.createElement('p');
+            const ammo = type.weaponDefinitions[0].ammunition;
+            image.src = ammo.image; image.alt = `Đạn ${type.name}`; heading.textContent = type.name;
+            text.textContent = `Công ${ammo.attack} / Thủ ${ammo.defense}`;
+            card.append(image, heading, text); document.querySelector('#ammunition').append(card);
+        });
+        function draw(time) {
+            previews.forEach(({ c, plane, type }) => {
+                c.clearRect(0, 0, 440, 240); renderAircraft(c, plane, time / 1000);
+                const image = sprite(type.ammunition.image);
+                if (image) c.drawImage(image, 370 - type.ammunition.width / 2, 100 + Math.sin(time / 500) * 7, type.ammunition.width, type.ammunition.height);
+                c.font = 'bold 14px system-ui'; c.fillStyle = '#293c35'; c.textAlign = 'center'; c.fillText('BOM', 370, 175);
+            });
+            requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+        window.aircraftGalleryReady = true;
+    </script>
+</body>
+</html>

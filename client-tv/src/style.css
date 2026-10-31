@@ -79,6 +79,55 @@ header {
   border-radius: 12px;
   transition: transform 0.2s, border 0.2s;
   border: 4px solid transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.game-card:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 5px;
+}
+
+.desktop-play,
+.desktop-controls button {
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #646cff;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.desktop-play:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.desktop-game #game-container {
+  height: calc(100dvh - 60px);
+}
+
+.desktop-game .racing-stage,
+.desktop-game .racing-unsupported,
+.desktop-game .coming-soon {
+  height: 100%;
+}
+
+.desktop-controls {
+  box-sizing: border-box;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #1a1a1a;
+  font-size: 14px;
+}
+
+.desktop-controls button {
+  padding: 8px 12px;
 }
 
 .game-card.focused {

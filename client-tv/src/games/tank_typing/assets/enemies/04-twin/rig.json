@@ -1,0 +1,110 @@
+{
+  "id": "04-twin",
+  "name": "Pháo đôi",
+  "color": "#747c60",
+  "accent": "#434d49",
+  "health": 6,
+  "scale": 0.88,
+  "moveSpeed": 105,
+  "fireInterval": 3.1,
+  "rig": {
+    "hull": {
+      "x": -120,
+      "y": -40,
+      "width": 270,
+      "height": 70
+    },
+    "turret": {
+      "x": -55,
+      "y": -122,
+      "width": 130,
+      "height": 88
+    },
+    "tracks": {
+      "x": -116,
+      "y": 10,
+      "width": 262,
+      "height": 60
+    },
+    "wheel": {
+      "radius": 16.16,
+      "centers": [
+        -86.0,
+        -52.33,
+        -18.67,
+        15.0,
+        48.67,
+        82.33,
+        116.0
+      ]
+    },
+    "tread": {
+      "count": 50,
+      "width": 12,
+      "height": 8
+    },
+    "trackPath": {
+      "left": -86,
+      "right": 116,
+      "y": 40,
+      "radius": 25
+    }
+  },
+  "ammunition": {
+    "kind": "shell",
+    "speed": 780,
+    "attack": 2,
+    "defense": 3,
+    "width": 27,
+    "height": 10,
+    "color": "#ffc875"
+  },
+  "weapons": [
+    {
+      "id": "04-twin-gun-1",
+      "kind": "cannon",
+      "mount": {
+        "x": 63,
+        "y": -90.32,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -12.0,
+        "width": 132,
+        "height": 24
+      },
+      "muzzle": {
+        "x": 124,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    },
+    {
+      "id": "04-twin-gun-2",
+      "kind": "cannon",
+      "mount": {
+        "x": 63,
+        "y": -57.76,
+        "angle": 0
+      },
+      "bounds": {
+        "x": -8,
+        "y": -12.0,
+        "width": 132,
+        "height": 24
+      },
+      "muzzle": {
+        "x": 124,
+        "y": 0
+      },
+      "cooldown": 0.65,
+      "recoil": 8,
+      "maxAim": 0.45,
+      "layer": "rear"
+    }
+  ]
+}
