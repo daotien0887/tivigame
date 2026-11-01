@@ -13,6 +13,7 @@ import { TargetQueue } from '/src/games/tank_typing/TargetQueue.ts';
 import { TankTyping } from '/src/games/tank_typing/index.ts';
 import { ENEMY_DEFINITIONS, ENEMY_TANKS } from '/src/games/tank_typing/EnemyTanks.ts';
 import { ENEMY_AIRCRAFT, aircraftDropPoint, aircraftBob, renderAircraft } from '/src/games/tank_typing/EnemyAircraft.ts';
+import { LearningGuide } from '/src/games/tank_typing/LearningGuide.ts';
 
 const checks = [];
 const assert = (condition, name) => { if (!condition) throw new Error(name); checks.push(name); };
@@ -22,6 +23,20 @@ const target = { id: 99, x: 1045, y: 470, health: 1000 };
 const factory = new TankFactory();
 let game;
 try {
+    const lesson = new LearningGuide();
+    assert(lesson.letters === 'ABC' && lesson.projectileLimit === 2 && lesson.flightDuration === 18, 'beginner lesson starts with three letters and slow, limited incoming rounds');
+    for (let i = 0; i < 6; i++) lesson.success(2);
+    assert(lesson.letters === 'ABCDEF' && lesson.stage === 1 && lesson.projectileLimit === 3, 'successful practice gradually unlocks letters and pace');
+    const fastDuration = lesson.flightDuration, fastInterval = lesson.interval;
+    lesson.struggle(); lesson.struggle();
+    assert(lesson.stage === 0 && lesson.flightDuration > fastDuration && lesson.interval > fastInterval, 'mistakes lower pace and concurrent threats without removing learned letters');
+    assert(lesson.letters === 'ABCDEF', 'difficulty reduction retains learning progress');
+    const slowLearner = new LearningGuide();
+    for (let i = 0; i < 12; i++) slowLearner.success(15);
+    assert(slowLearner.stage === 1, 'slow correct responses still progress at a gentle pace');
+    for (let i = 0; i < 100; i++) lesson.success(1);
+    assert(lesson.letters.length === 26 && lesson.flightDuration >= 12 && lesson.projectileLimit <= 4, 'advanced practice stays bounded and can unlock the full alphabet');
+    assert(lesson.chooseLetter(new Set('ABCDEFGHIJKLMNOPQRSTUVWXY')) === 'Z', 'the final alphabet letter remains reachable');
     const transform = Transform.pose(230, 490, 0.17, -1.4, 1.2).multiply(Transform.pose(25, -63, -0.3));
     assert(same(transform.inversePoint(transform.point({ x: 118, y: 2 })), { x: 118, y: 2 }), 'nested mirrored transform round trip');
     const canvas = document.createElement('canvas'); canvas.width = 1200; canvas.height = 950;
@@ -38,7 +53,7 @@ try {
     const poses = [];
     for (const tank of tanks) {
         assert(tank instanceof Tank && tank instanceof PlayerTank, `level ${tank.level}: tank inheritance`);
-        assert(tank.weapons.length === tank.level, `level ${tank.level}: loadout count`);
+        assert(tank.weapons.length === Math.min(5, tank.level), `level ${tank.level}: loadout count`);
         const clone = factory.createPlayer(tank.level);
         assert(tank.weapons.every((weapon, i) => weapon !== clone.weapons[i] && weapon.definition.mount !== clone.weapons[i].definition.mount), `level ${tank.level}: independent instances`);
         tank.move(45);
@@ -60,10 +75,14 @@ try {
                 shots.push(shot);
             }
         }
-        assert(shots.length === tank.level, `level ${tank.level}: every equipped weapon fires once`);
-        assert(shots.filter(shot => shot instanceof CannonShell).length === Math.min(2, tank.level), `level ${tank.level}: cannon shells`);
+        assert(shots.length === Math.min(5, tank.level), `level ${tank.level}: every equipped weapon fires once`);
+        assert(shots.filter(shot => shot.definition.kind === 'shell').length === (tank.level >= 6 ? 1 : Math.min(2, tank.level)), `level ${tank.level}: cannon shells`);
         if (tank.level >= 3) assert(shots.some(shot => shot instanceof RotaryBullet), `level ${tank.level}: rotary bullets`);
-        if (tank.level === 4) assert(shots.some(shot => shot instanceof MortarBomb), 'level 4: mortar bombs');
+        if (tank.level >= 4) assert(shots.some(shot => shot instanceof MortarBomb), `level ${tank.level}: mortar bombs`);
+        if (tank.level >= 5) assert(shots.some(shot => shot.definition.kind === 'rocket'), `level ${tank.level}: rocket launcher fires`);
+        if (tank.level >= 6) assert(shots.some(shot => shot.definition.kind === 'plasma'), `level ${tank.level}: plasma cannon fires`);
+        if (tank.level >= 6) assert(shots.filter(shot => shot.definition.kind === 'bullet').length === 1, `level ${tank.level}: one upgraded Gatling replaces extra guns`);
+        if (tank.level === 8) assert(shots.some(shot => shot.attack === 10), 'level 8: siege cannon fires powerful ammunition');
         poses.push(tank);
     }
     const moving = factory.createPlayer(); moving.move(38); moving.update(1 / 60);
@@ -180,6 +199,26 @@ try {
     let projectileId = -10000;
     const projectile = (letter, extra = {}) => ({ id: projectileId--, health: 1, maxHealth: 1, kind: 'projectile',
         x: 700, y: 450, startX: 1000, startY: 450, progress: 0.5, duration: 10, letter, bomb: false, ...extra });
+    game.start(); game.enemies = []; game.projectiles = [projectile('A')];
+    game.idleTime = 5; game.draw();
+    assert(game.root.querySelector('.tank-hint').textContent === 'A a' && game.root.querySelector('[data-letter="A"]').classList.contains('is-hint'), 'idle child receives matching uppercase/lowercase cue and highlighted letter button');
+    const initialScore = game.score;
+    game.onKey(new KeyboardEvent('keydown', { key: 'Enter' }));
+    assert(game.score === initialScore && !game.player.weapons.some(weapon => weapon.hasPendingTarget), 'Enter cannot bypass letter learning during play');
+    game.root.querySelector('[data-letter="A"]').click();
+    assert(game.score === initialScore + 10 && game.player.weapons.some(weapon => weapon.hasPendingTarget), 'local touch letter button uses the same single-target firing queue');
+    const confidenceBeforeBusy = game.lesson.confidence;
+    game.intercept('A');
+    assert(game.lesson.confidence === confidenceBeforeBusy, 'busy guns do not count as a learning mistake');
+    game.projectiles.push(projectile('B'));
+    game.intercept('Z'); game.draw();
+    assert(game.idleTime >= 4 && game.root.querySelector('[data-letter="B"]').classList.contains('is-hint'), 'incorrect letters offer an immediate visual retry hint without deducting points');
+    game.togglePause(); game.draw(); const pausedScore = game.score;
+    assert(!game.root.querySelector('.tank-menu').hidden && [...game.root.querySelectorAll('.tank-keys button')].every(button => button.disabled), 'pause exposes a concise resume menu and disables local controls');
+    game.root.querySelector('[data-letter="A"]').click();
+    assert(game.score === pausedScore, 'paused letter controls cannot fire');
+    game.root.querySelector('.tank-start-local').click();
+    assert(game.state === 'playing', 'local resume button works without a mobile controller');
     const interceptAt = (score, letter) => {
         game.score = score;
         game.projectiles = [projectile(letter)]; game.shells = [];
@@ -198,19 +237,80 @@ try {
     assert(game.player.level === 4 && game.health === 18 && game.player.maxHealth === 18, 'level 4 repairs to eighteen durability');
     assert(states.at(-1).extraData.maxHealth === 18 && states.at(-1).extraData.health === 18, 'mobile state carries current and maximum durability');
     game.player.takeDamage(1); interceptAt(1200, 'E');
-    assert(game.player.level === 4 && game.health === 17, 'maximum level does not grant repeated repair');
+    assert(game.player.level === 4 && game.health === 17, 'points within a level do not grant repeated repair');
     game.start(); game.player.takeDamage(4); interceptAt(990, 'F');
     assert(game.player.level === 4 && game.health === 18, 'crossing multiple thresholds selects highest level and repairs');
     game.start();
     assert(game.player.level === 1 && game.health === 5 && game.player.maxHealth === 5, 'restart resets upgraded maximum durability');
-    assert(new Set(TANK_LEVELS.map(level => level.appearance.hull.image)).size === 4
-        && new Set(TANK_LEVELS.map(level => level.appearance.turret.image)).size === 4, 'every level has its own image-derived body and turret');
+    assert(new Set(TANK_LEVELS.map(level => level.appearance.hull.image)).size === 8
+        && new Set(TANK_LEVELS.map(level => level.appearance.turret.image)).size === 8, 'all eight levels have their own image-derived body and turret');
     assert(TANK_LEVELS.every((level, index) => index === 0 || level.maxHealth > TANK_LEVELS[index - 1].maxHealth), 'maximum durability increases at every level');
+    assert(TANK_LEVELS.length === 8 && TANK_LEVELS.every((level, index) => index === 0
+        || level.appearance.hull.width * level.scale > TANK_LEVELS[index - 1].appearance.hull.width * TANK_LEVELS[index - 1].scale), 'eight player levels grow in body size');
+    assert(TANK_LEVELS.every(level => level.weapons.length <= 5) && TANK_LEVELS.slice(4).every(level => level.weapons.length === 5), 'all high-level loadouts keep exactly five weapons');
+    for (const definition of TANK_LEVELS.slice(5)) {
+        const previous = TANK_LEVELS[definition.level - 2];
+        assert(definition.weapons.every(weapon => weapon.ammunition.attack > previous.weapons.find(item => item.id === weapon.id).ammunition.attack), `level ${definition.level}: each replacement has higher attack in the same slot`);
+        assert(definition.weapons.every(weapon => weapon.ammunition.effect && weapon.muzzleEffect), `level ${definition.level}: all five weapons have matching projectile and muzzle effects`);
+        const instance = factory.createPlayer(definition.level);
+        for (const weapon of instance.weapons) {
+            const shot = ammoFactory.create(weapon.definition.ammunition, { x: 200, y: 400 }, target.id, 0);
+            for (let frame = 0; frame < 4; frame++) shot.update(1 / 60, target);
+            c.save(); c.translate(12, 9); c.globalAlpha = 0.65;
+            const matrix = [...c.getTransform().toFloat64Array()], alpha = c.globalAlpha;
+            shot.render(c);
+            assert(JSON.stringify([...c.getTransform().toFloat64Array()]) === JSON.stringify(matrix) && near(c.globalAlpha, alpha)
+                && c.globalCompositeOperation === 'source-over', `${weapon.definition.id} level ${definition.level}: projectile effects restore canvas state`);
+            c.restore();
+        }
+    }
+    const capped = factory.createPlayer(8), extraGun = factory.weapons.create(TANK_LEVELS[0].weapons[0]);
+    let attachRejected = false, equipRejected = false;
+    try { capped.attachWeapon(extraGun); } catch (error) { attachRejected = error instanceof RangeError; }
+    try { capped.equip([...capped.weapons, extraGun]); } catch (error) { equipRejected = error instanceof RangeError; }
+    assert(attachRejected && equipRejected && capped.weapons.length === 5, 'player cannot install a sixth weapon through attachment or equipment');
+    const replacing = factory.createPlayer(5), oldMain = replacing.weapons.find(weapon => weapon.definition.id === 'main-cannon');
+    oldMain.requestFire(target); factory.upgrade(replacing, 6);
+    const plasmaReplacement = replacing.weapons.find(weapon => weapon.definition.id === 'main-cannon');
+    assert(plasmaReplacement.definition.kind === 'plasma' && plasmaReplacement.pendingTargetIds.includes(target.id), 'cannon-to-plasma replacement retains its queued target');
+    const replacementShots = [];
+    for (let frame = 0; frame < 120; frame++) replacementShots.push(...replacing.update(1 / 60, [target]));
+    assert(replacementShots.length === 1 && replacementShots[0].definition.kind === 'plasma' && replacementShots[0].attack === 4,
+        'a replaced weapon fires the preserved request once with its upgraded ammunition');
+    const reloading = factory.createPlayer(5), reloadingMain = reloading.weapons.find(weapon => weapon.definition.id === 'main-cannon');
+    reloadingMain.fireManually(); reloadingMain.update(0.1, reloading.bodyTransform, []);
+    factory.upgrade(reloading, 6);
+    const reloadingPlasma = reloading.weapons.find(weapon => weapon.definition.id === 'main-cannon');
+    assert(!reloadingPlasma.isReady && near(reloadingPlasma.reloadRemaining, 0.3), 'changing weapon kind preserves reload instead of granting an extra shot');
+    game.start(); factory.upgrade(game.player, 8); game.enemies = []; game.spawnTime = 100;
+    const novaTarget = projectile('A', { x: 700, y: 400, startX: 700, startY: 400, progress: 0, duration: 100, health: 5, maxHealth: 5 });
+    const untouchedTarget = projectile('A', { x: 800, y: 400, startX: 800, startY: 400, progress: 0, duration: 100, health: 5, maxHealth: 5 });
+    game.projectiles = [novaTarget, untouchedTarget];
+    const novaAmmo = game.player.weapons.find(weapon => weapon.definition.id === 'upper-cannon').definition.ammunition;
+    game.shells = [ammoFactory.create(novaAmmo, novaTarget, novaTarget.id, 0)]; game.update(1 / 60);
+    assert(!game.projectiles.includes(novaTarget) && untouchedTarget.health === 5, 'powerful Nova round still damages only its assigned target');
+    assert(game.effects.some(effect => effect.energy === 'nova' && effect.color === novaAmmo.effectColor), 'impact effects match the firing ammunition color and style');
+    game.draw();
+    for (const definition of TANK_LEVELS.slice(4)) {
+        assert(factory.levelForScore(definition.requiredScore - 1) === definition.level - 1
+            && factory.levelForScore(definition.requiredScore) === definition.level, `level ${definition.level}: exact automatic upgrade threshold`);
+        game.start(); factory.upgrade(game.player, definition.level - 1); game.player.takeDamage(game.player.maxHealth - 1);
+        interceptAt(definition.requiredScore - 10, 'A');
+        assert(game.player.level === definition.level && game.player.weapons.length === Math.min(5, definition.level)
+            && game.player.health === definition.maxHealth, `level ${definition.level}: correct typing automatically upgrades the loadout and fully repairs stronger armor`);
+        assert(game.player.weapons.some(weapon => weapon.hasPendingTarget), `level ${definition.level}: upgrade preserves assigned targets`);
+    }
+    game.player.takeDamage(1); interceptAt(9000, 'A');
+    assert(game.player.level === 8 && game.player.health === 53, 'final level remains playable without repeated free repairs');
+    const finalTank = factory.createPlayer(8);
+    finalTank.moveTo(-10000); for (let frame = 0; frame < 180; frame++) finalTank.update(1 / 60);
+    assert(finalTank.x + finalTank.appearance.hull.x * finalTank.scale >= 15, 'largest tank keeps an animation margin at the left edge');
     game.start();
     assert(new Set(game.enemies.map(enemy => enemy.letter)).size === game.enemies.length, 'active enemies have distinct letters');
     const letterTank = game.enemies.find(enemy => enemy instanceof EnemyTank);
     const assignedLetter = letterTank.letter;
     game.enemies = [letterTank]; letterTank.x = 1045;
+    game.lesson.confidence = 12;
     for (let i = 0; i < 3; i++) { letterTank.update(1); game.spawnTime = 0; game.update(1 / 60); }
     const tankBullets = game.projectiles.filter(projectile => projectile.sourceId === letterTank.id);
     assert(tankBullets.length === 3 && tankBullets.every(projectile => projectile.letter === assignedLetter), 'every tank bullet repeats its source tank letter');

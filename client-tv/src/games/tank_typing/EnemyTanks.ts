@@ -47,7 +47,7 @@ export const ENEMY_TANKS: readonly EnemyTankStyle[] = ENEMY_DEFINITIONS.map(defi
     };
     return {
         name: definition.name, color: definition.color, accent: definition.accent,
-        health: definition.health, scale: definition.scale, moveSpeed: definition.moveSpeed,
+        health: definition.health, scale: definition.scale * 0.88, moveSpeed: definition.moveSpeed,
         fireInterval: definition.fireInterval, appearance,
         weaponDefinitions: definition.weapons.map(weapon => ({
             ...weapon, image: asset(id, 'weapon'), flashImage: asset(id, 'flash'),

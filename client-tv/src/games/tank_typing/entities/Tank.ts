@@ -102,20 +102,32 @@ export abstract class Tank implements Target {
 }
 
 export class PlayerTank extends Tank {
+    static readonly MAX_WEAPONS = 5;
     level = 1;
     appearance = PLAYER_APPEARANCES[1];
 
+    override attachWeapon(weapon: Weapon): void {
+        if (this.weapons.length >= PlayerTank.MAX_WEAPONS) throw new RangeError('Player tanks support at most five weapons');
+        super.attachWeapon(weapon);
+    }
+
+    override equip(weapons: readonly Weapon[]): void {
+        if (weapons.length > PlayerTank.MAX_WEAPONS) throw new RangeError('Player tanks support at most five weapons');
+        super.equip(weapons);
+    }
+
     override moveTo(x: number): void {
-        this.targetX = Math.max(Math.max(160, -Math.min(this.appearance.hull.x, this.appearance.tracks.x) * this.scale + 4), Math.min(430, x));
+        this.targetX = Math.max(Math.max(160, -Math.min(this.appearance.hull.x, this.appearance.tracks.x) * this.scale + 16), Math.min(430, x));
     }
 
     protected updateMovement(dt: number): void { this.x += (this.targetX - this.x) * (1 - Math.exp(-14 * dt)); }
 
     upgrade(level: number, scale: number, appearance: TankAppearance, maxHealth: number, weapons: readonly Weapon[]): void {
+        this.equip(weapons);
         this.level = level; this.scale = scale; this.appearance = appearance;
         this.maxHealth = maxHealth; this.health = maxHealth; this.flash = 0;
         this.y = 600 - (appearance.tracks.y + appearance.tracks.height) * scale;
-        this.equip(weapons); this.moveTo(this.targetX);
+        this.moveTo(this.targetX);
     }
 
     render(c: CanvasRenderingContext2D): void { this.renderAppearance(c, this.appearance); }

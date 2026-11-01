@@ -13,6 +13,8 @@ export interface AmmunitionDefinition {
     width: number;
     height: number;
     color: string;
+    effect?: 'comet' | 'plasma' | 'tracer' | 'nova' | 'rocket';
+    effectColor?: string;
 }
 
 export abstract class Ammunition implements Point {
@@ -56,14 +58,55 @@ export abstract class Ammunition implements Point {
 
     render(c: CanvasRenderingContext2D): void {
         c.save();
-        this.trail.forEach((point, i) => {
-            c.globalAlpha = (1 - i / 9) * 0.45;
-            circle(c, point.x, point.y, Math.max(1, this.definition.height * 0.45 - i * 0.35), this.definition.color);
-        });
+        if (this.definition.effect) this.renderEnergyTrail(c);
+        else this.trail.forEach((point, i) => {
+                c.globalAlpha = (1 - i / 9) * 0.45;
+                circle(c, point.x, point.y, Math.max(1, this.definition.height * 0.45 - i * 0.35), this.definition.color);
+            });
         c.globalAlpha = 1; c.translate(this.x, this.y); c.rotate(this.angle);
+        if (this.definition.effect) this.renderEnergyCore(c);
         const image = sprite(this.definition.image);
         if (image) c.drawImage(image, -this.definition.width / 2, -this.definition.height / 2, this.definition.width, this.definition.height);
         else this.renderFallback(c);
+        c.restore();
+    }
+
+    private renderEnergyTrail(c: CanvasRenderingContext2D): void {
+        c.save(); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round';
+        const effect = this.definition.effect, color = this.definition.effectColor ?? this.definition.color;
+        const width = effect === 'tracer' ? 2.5 : Math.min(10, this.definition.height * 0.65);
+        c.shadowColor = color; c.shadowBlur = effect === 'tracer' ? 3 : 7;
+        for (let i = this.trail.length - 1; i >= 0; i--) {
+            const point = this.trail[i], next = i ? this.trail[i - 1] : this;
+            c.globalAlpha = (1 - i / this.trail.length) * 0.65;
+            c.strokeStyle = color; c.lineWidth = width * (1 - i / (this.trail.length + 1));
+            c.beginPath(); c.moveTo(point.x, point.y); c.lineTo(next.x, next.y); c.stroke();
+            c.strokeStyle = '#fffdf1'; c.lineWidth = Math.max(0.7, c.lineWidth * 0.25); c.stroke();
+            if (effect === 'rocket' && i % 3 === 0) {
+                c.globalAlpha *= 0.25; circle(c, point.x, point.y, 2 + i * 0.4, '#c2cdd0');
+            }
+        }
+        c.restore();
+    }
+
+    private renderEnergyCore(c: CanvasRenderingContext2D): void {
+        const effect = this.definition.effect, color = this.definition.effectColor ?? this.definition.color;
+        const radius = this.definition.height * (effect === 'nova' ? 1.2 : 0.9);
+        c.save(); c.globalCompositeOperation = 'lighter';
+        const glow = c.createRadialGradient(0, 0, 1, 0, 0, radius * 2);
+        glow.addColorStop(0, '#fffef2'); glow.addColorStop(0.25, color); glow.addColorStop(1, 'transparent');
+        c.fillStyle = glow; c.beginPath(); c.ellipse(0, 0, radius * 2, radius * 1.35, 0, 0, Math.PI * 2); c.fill();
+        if (effect === 'plasma' || effect === 'nova') {
+            c.strokeStyle = color; c.lineWidth = 1.2; c.globalAlpha = 0.7;
+            c.beginPath(); c.ellipse(0, 0, radius * 0.65, radius * 1.05, this.age * 5, 0, Math.PI * 2); c.stroke();
+            for (let i = 0; i < 2; i++) {
+                const angle = this.age * 7 + i * Math.PI;
+                circle(c, Math.cos(angle) * radius, Math.sin(angle) * radius * 0.8, 1.5, '#fffdf1');
+            }
+        } else if (effect === 'rocket') {
+            const length = 14 + Math.sin(this.age * 18) * 2, tail = -this.definition.width / 2;
+            c.fillStyle = color; c.beginPath(); c.moveTo(tail, -3); c.lineTo(tail - length, 0); c.lineTo(tail, 3); c.fill();
+        }
         c.restore();
     }
 

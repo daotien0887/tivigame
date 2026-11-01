@@ -16,13 +16,16 @@ export const TankController: React.FC<ControllerProps> = ({ onInput, gameState, 
     }, [onInput, gameState]);
 
     const showStart = gameState === 'idle' || gameState === 'countdown' || gameState === 'game_over';
+    const letters = typeof extraData.practiceLetters === 'string' && /^[A-Z]{1,6}$/.test(extraData.practiceLetters)
+        ? extraData.practiceLetters : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const hint = typeof extraData.hintLetter === 'string' && /^[A-Z]$/.test(extraData.hintLetter) ? extraData.hintLetter : '';
 
     return (
         <div className="controller-layout tank-controller">
             {showStart && <h2>🛡️ Xe tăng chữ cái</h2>}
             <div className="tank-status">
                 <DriveButton direction="LEFT" onInput={onInput} disabled={gameState !== 'playing'}>◀</DriveButton>
-                <span>{gameState === 'paused' && 'Tạm dừng · '}★ {Number(extraData.score ?? 0)} · ♥ {Number(extraData.health ?? 5)}/{Number(extraData.maxHealth ?? 5)}</span>
+                <span>{gameState === 'paused' && 'Tạm dừng · '}★ {Number(extraData.score ?? 0)} · ♥ {Number(extraData.health ?? 5)}</span>
                 <DriveButton direction="RIGHT" onInput={onInput} disabled={gameState !== 'playing'}>▶</DriveButton>
             </div>
             {showStart ? (
@@ -31,14 +34,13 @@ export const TankController: React.FC<ControllerProps> = ({ onInput, gameState, 
                 </button>
             ) : (
                 <>
-                    <div className="tank-keyboard" role="group" aria-label="Bấm chữ giống trên đạn hoặc bom">
-                        {['ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ'].map(row => (
-                            <div className="tank-key-row" key={row}>
-                                {[...row].map(letter => (
-                                    <button key={letter} disabled={gameState !== 'playing'}
-                                        onClick={() => onInput(`LETTER_${letter}`)}>{letter}</button>
-                                ))}
-                            </div>
+                    {hint && <div className="tank-controller-hint">Tìm chữ <strong>{hint} {hint.toLowerCase()}</strong></div>}
+                    <div className="tank-keyboard" role="group" aria-label="Chọn chữ giống mẫu"
+                        style={{ gridTemplateColumns: `repeat(${Math.min(letters.length, 6)}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${Math.ceil(letters.length / 6)}, minmax(0, 1fr))` }}>
+                        {[...letters].map(letter => (
+                            <button key={letter} disabled={gameState !== 'playing'} aria-label={`Chữ ${letter}`}
+                                className={extraData.showHint && letter === hint ? 'tank-letter-hint' : ''}
+                                onClick={() => onInput(`LETTER_${letter}`)}>{letter}</button>
                         ))}
                     </div>
                 </>

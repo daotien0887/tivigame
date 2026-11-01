@@ -1,0 +1,74 @@
+{
+  "frames": {
+    "cannon": {
+      "x": 40,
+      "y": 0,
+      "width": 930,
+      "height": 235,
+      "isolate": true
+    },
+    "cannon-ammo": {
+      "x": 1045,
+      "y": 70,
+      "width": 450,
+      "height": 155,
+      "isolate": false
+    },
+    "plasma": {
+      "x": 45,
+      "y": 240,
+      "width": 920,
+      "height": 210,
+      "isolate": true
+    },
+    "plasma-ammo": {
+      "x": 1040,
+      "y": 260,
+      "width": 430,
+      "height": 185,
+      "isolate": false
+    },
+    "rotary": {
+      "x": 45,
+      "y": 450,
+      "width": 920,
+      "height": 195,
+      "isolate": true
+    },
+    "rotary-ammo": {
+      "x": 1085,
+      "y": 495,
+      "width": 360,
+      "height": 120,
+      "isolate": false
+    },
+    "mortar": {
+      "x": 45,
+      "y": 640,
+      "width": 810,
+      "height": 205,
+      "isolate": true
+    },
+    "mortar-ammo": {
+      "x": 1075,
+      "y": 665,
+      "width": 370,
+      "height": 165,
+      "isolate": false
+    },
+    "rocket": {
+      "x": 120,
+      "y": 835,
+      "width": 600,
+      "height": 185,
+      "isolate": true
+    },
+    "rocket-ammo": {
+      "x": 1060,
+      "y": 845,
+      "width": 445,
+      "height": 165,
+      "isolate": false
+    }
+  }
+}

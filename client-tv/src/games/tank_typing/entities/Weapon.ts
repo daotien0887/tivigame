@@ -21,6 +21,7 @@ export interface WeaponDefinition {
     color?: string;
     cartoon?: boolean;
     flashImage?: string;
+    muzzleEffect?: { color: string; radius: number; ring?: boolean };
 }
 
 interface FireRequest { targetId: number; age: number }
@@ -47,7 +48,7 @@ export abstract class Weapon {
 
     get reloadRemaining(): number { return this.cooldown; }
 
-    playFireAnimation(): void { this.recoil = 1; this.flash = 0.09; }
+    playFireAnimation(): void { this.recoil = 1; this.flash = this.definition.muzzleEffect ? 0.12 : 0.09; }
 
     fireManually(): boolean {
         if (!this.isReady) return false;
@@ -112,10 +113,26 @@ export abstract class Weapon {
         this.renderMechanism(c);
         if (this.flash > 0) {
             const muzzle = this.definition.muzzle;
-            c.globalAlpha *= this.flash / 0.09;
-            const image = sprite(this.definition.flashImage ?? flashSprite);
-            if (image) c.drawImage(image, muzzle.x - 2, muzzle.y - 14, 35, 28);
-            else box(c, muzzle.x, muzzle.y - 5, 18, 10, '#ffe699', 4);
+            const effect = this.definition.muzzleEffect;
+            c.globalAlpha *= this.flash / (effect ? 0.12 : 0.09);
+            if (effect) {
+                const radius = effect.radius, progress = 1 - this.flash / 0.12;
+                c.translate(muzzle.x, muzzle.y); c.globalCompositeOperation = 'lighter';
+                const glow = c.createRadialGradient(4, 0, 1, 4, 0, radius);
+                glow.addColorStop(0, '#fffef2'); glow.addColorStop(0.3, effect.color); glow.addColorStop(1, 'transparent');
+                c.fillStyle = glow; c.beginPath(); c.ellipse(5, 0, radius * 1.5, radius, 0, 0, Math.PI * 2); c.fill();
+                c.strokeStyle = effect.color; c.lineWidth = 2.5;
+                if (effect.ring) { c.beginPath(); c.ellipse(5 + progress * 10, 0, radius * 0.3, radius * (0.4 + progress * 0.5), 0, 0, Math.PI * 2); c.stroke(); }
+                else {
+                    for (const angle of [-0.5, 0, 0.5]) {
+                        c.beginPath(); c.moveTo(2, 0); c.lineTo(Math.cos(angle) * radius * 1.3, Math.sin(angle) * radius); c.stroke();
+                    }
+                }
+            } else {
+                const image = sprite(this.definition.flashImage ?? flashSprite);
+                if (image) c.drawImage(image, muzzle.x - 2, muzzle.y - 14, 35, 28);
+                else box(c, muzzle.x, muzzle.y - 5, 18, 10, '#ffe699', 4);
+            }
         }
         c.restore();
     }
@@ -196,13 +213,14 @@ export class WeaponFactory {
         const builder = this.builders.get(definition.kind);
         if (!builder) throw new Error(`Unknown weapon: ${definition.kind}`);
         return builder({ ...definition, mount: { ...definition.mount }, bounds: { ...definition.bounds },
-            muzzle: { ...definition.muzzle }, ammunition: { ...definition.ammunition } }, this.ammunition);
+            muzzle: { ...definition.muzzle }, ammunition: { ...definition.ammunition },
+            muzzleEffect: definition.muzzleEffect ? { ...definition.muzzleEffect } : undefined }, this.ammunition);
     }
 
     assemble(definitions: readonly WeaponDefinition[], previous: readonly Weapon[] = []): Weapon[] {
         return definitions.map(definition => {
             const weapon = this.create(definition);
-            const existing = previous.find(item => item.definition.id === definition.id && item.definition.kind === definition.kind);
+            const existing = previous.find(item => item.definition.id === definition.id);
             if (existing) weapon.inheritState(existing);
             return weapon;
         });

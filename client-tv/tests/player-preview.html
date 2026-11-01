@@ -1,0 +1,33 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Xe tăng · Animation</title></head>
+<body style="margin:0;background:#dce7d7"><canvas width="800" height="550"></canvas><p id="status">Đang tải…</p>
+<script type="module">
+import { TankFactory } from '/src/games/tank_typing/TankFactory.ts';
+import { sprite } from '/src/games/tank_typing/entities/Sprites.ts';
+try {
+    const level = Number(new URLSearchParams(location.search).get('level')) || 5;
+    const tank = new TankFactory().createPlayer(level);
+    const sources = [...Object.values(tank.appearance).filter(part => part.image).map(part => part.image),
+        ...tank.weapons.flatMap(weapon => [weapon.definition.image, weapon.definition.ammunition.image])];
+    await Promise.all(sources.map(source => new Promise((resolve, reject) => {
+        sprite(source); const image = new Image(); image.onload = resolve; image.onerror = reject; image.src = source;
+    })));
+    for (let i = 0; i < 200 && !sources.every(source => sprite(source)); i++) await new Promise(resolve => setTimeout(resolve, 10));
+    tank.x = 230; tank.y = 510 - (tank.appearance.tracks.y + tank.appearance.tracks.height) * tank.scale;
+    const targets = tank.weapons.map((_, index) => ({ id: 1000 + index, x: 1200, y: 350 + index * 12, health: 1000 }));
+    const c = document.querySelector('canvas').getContext('2d');
+    const frames = []; let shots = [];
+    for (let frame = 0; frame < 32; frame++) {
+        tank.moveTo(230 + Math.sin(frame / 32 * Math.PI * 2) * 30);
+        if ([4, 13, 22].includes(frame)) tank.weapons.forEach((weapon, index) => { if (weapon.isReady) weapon.requestFire(targets[index]); });
+        shots.push(...tank.update(1 / 16, targets));
+        shots.forEach(shot => shot.update(1 / 16, targets.find(target => target.id === shot.targetId)));
+        shots = shots.filter(shot => !shot.hit && !shot.expired);
+        c.clearRect(0, 0, 800, 550); tank.render(c); shots.forEach(shot => shot.render(c));
+        frames.push(c.canvas.toDataURL('image/png'));
+    }
+    window.playerFrames = frames; window.playerPreviewReady = true;
+    document.querySelector('#status').textContent = `Xe ${level} · ${tank.weapons.length} súng · Độ bền ${tank.maxHealth}`;
+    const playback = frames.map(source => { const image = new Image(); image.src = source; return image; }); let frame = 0;
+    setInterval(() => { const image = playback[frame++ % 32]; if (image.complete) { c.clearRect(0, 0, 800, 550); c.drawImage(image, 0, 0); } }, 62.5);
+} catch (error) { document.querySelector('#status').textContent = String(error); window.playerPreviewError = String(error); }
+</script></body></html>

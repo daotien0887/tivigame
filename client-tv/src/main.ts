@@ -17,7 +17,7 @@ const desktopController: ControllerInfo = {
 };
 const desktopKeys = new Set<string>();
 const desktopHints: Record<string, string> = {
-    tank_typing: '← → lái xe · A–Z chặn đạn · Enter bắt đầu / bắn · Esc tạm dừng',
+    tank_typing: '',
     flappy_bird: 'Space / ↑ / nhấp chuột để bay · Enter chơi lại · Esc tạm dừng',
     gold_miner: '← ↑ ↓ → di chuyển · Space mua / nổ mìn · B cửa hàng · Enter tiếp tục / chơi lại',
     racing_car: '← → chọn / lái · ↑ ga · ↓ phanh · Enter xác nhận · Space bắt đầu · F/R tiến/lùi',
@@ -188,6 +188,7 @@ function launch(gameId: string): void {
 
     renderer.renderInGame(desktopMode, desktopHints[gameId] ?? '');
     const container = document.getElementById('game-container')!;
+    if (gameId === 'tank_typing') container.closest('.desktop-game')?.classList.add('tank-desktop');
     const activeGame = gameManager.launch(gameId, container, exitToHub, s.roomId, gameControllers());
     store.update({ activeGame });
 }

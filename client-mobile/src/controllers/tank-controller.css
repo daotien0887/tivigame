@@ -47,7 +47,7 @@
     gap: 6px;
 }
 .tank-key-row { display: contents; }
-.tank-key-row button, .tank-start {
+.tank-keyboard button, .tank-start {
     color: #263e31;
     background: #e5f3b2;
     border: 0;
@@ -59,16 +59,10 @@
     user-select: none;
     -webkit-user-select: none;
 }
-.tank-key-row button { width: 100%; min-width: 0; min-height: 0; padding: 0; }
-.tank-key-row button:active { transform: translateY(2px); background: #b7da72; }
-.tank-key-row button:disabled { opacity: 0.4; }
+.tank-keyboard button { width: 100%; min-width: 0; min-height: 44px; padding: 0; }
+.tank-keyboard button:active { transform: translateY(2px); background: #b7da72; }
+.tank-keyboard button:disabled { opacity: 0.4; }
+.tank-controller-hint { display: flex; align-items: center; justify-content: center; gap: 12px; color: #e5f3b2; font-size: 20px; }
+.tank-controller-hint strong { font-size: 36px; }
+.tank-keyboard .tank-letter-hint { background: #ffe697; outline: 4px solid #d49b34; outline-offset: -4px; }
 .tank-start { padding: 16px 32px; margin: auto; min-height: 56px; }
-
-@media (orientation: landscape) {
-    .tank-keyboard {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: repeat(3, minmax(0, 1fr));
-    }
-    .tank-key-row { display: flex; justify-content: center; gap: 6px; min-height: 0; }
-    .tank-key-row button { width: calc((100% - 54px) / 10); }
-}

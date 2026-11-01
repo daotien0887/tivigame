@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xe tăng cấp 5–8</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 24px; background: #e9eddf; color: #293c35; font-family: system-ui, sans-serif; }
+        h1 { margin: 0 0 24px; font-size: 28px; }
+        main { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        article { overflow: hidden; border-radius: 18px; background: #fffdf2; }
+        img { display: block; width: 100%; aspect-ratio: 800 / 550; object-fit: contain; background: #d8e3ce; }
+        h2 { margin: 16px 20px 8px; font-size: 22px; }
+        p { margin: 0 20px 16px; line-height: 1.6; }
+        a { display: inline-block; margin: 0 20px 20px; color: #426c35; }
+    </style>
+</head>
+<body>
+    <h1>Xe tăng mới · Cấp 5–8</h1><main></main>
+    <script type="module">
+        import { TANK_LEVELS } from '/src/games/tank_typing/TankFactory.ts';
+        const animations = import.meta.glob('/src/games/tank_typing/assets/player/*/animation.gif', { eager: true, import: 'default' });
+        const upgrades = { 5: 'Giàn tên lửa', 6: 'Bộ pháo plasma', 7: 'Bộ pháo điện từ', 8: 'Bộ pháo Nova' };
+        for (const tank of TANK_LEVELS.slice(4)) {
+            const card = document.createElement('article'), image = new Image(), heading = document.createElement('h2'), stats = document.createElement('p'), link = document.createElement('a');
+            image.src = animations[`/src/games/tank_typing/assets/player/level-${tank.level}/animation.gif`]; image.alt = `Xe cấp ${tank.level}`;
+            heading.textContent = `Cấp ${tank.level} · ${tank.weapons.length} súng`;
+            stats.textContent = `${tank.requiredScore} điểm · Độ bền ${tank.maxHealth} · ${upgrades[tank.level]}`;
+            link.href = `tank-responsive.html?demo=1&level=${tank.level}`; link.textContent = 'Xem trong game';
+            card.append(image, heading, stats, link); document.querySelector('main').append(card);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Xe tăng · Xem bố cục</title>
+    <style>html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; } #game { width: 100%; height: 100dvh; }</style>
+</head>
+<body><div id="game"></div>
+<script type="module">
+    import { TankTyping } from '/src/games/tank_typing/index.ts';
+    import { ENEMY_TANKS } from '/src/games/tank_typing/EnemyTanks.ts';
+    import { ENEMY_AIRCRAFT } from '/src/games/tank_typing/EnemyAircraft.ts';
+    const game = new TankTyping(document.querySelector('#game'), () => {}, { emit() {} }, 'preview');
+    game.init(); window.tankGame = game;
+    if (new URLSearchParams(location.search).has('demo')) {
+        game.start(); game.tankFactory.upgrade(game.player, Number(new URLSearchParams(location.search).get('level')) || 4);
+        const enemy = game.tankFactory.createEnemy(100, 9, ENEMY_TANKS[9], 'B'); enemy.x = 1000; enemy.stop();
+        game.enemies = [enemy, { id: 101, kind: 'plane', variant: 3, x: 850, y: 220 - game.airShift, letter: 'C', health: 1, maxHealth: 1, flash: 0 }];
+        const sources = [...game.player.weapons.map(weapon => weapon.definition.image),
+            ...Object.values(game.player.appearance).filter(part => part.image).map(part => part.image),
+            ...Object.values(ENEMY_TANKS[9].appearance).filter(part => part.image).map(part => part.image),
+            ...enemy.weapons.map(weapon => weapon.definition.image), ENEMY_AIRCRAFT[3].body.image,
+            ...ENEMY_AIRCRAFT[3].moving.map(part => part.image)];
+        await Promise.all(sources.map(source => new Promise(resolve => { const image = new Image(); image.onload = resolve; image.onerror = resolve; image.src = source; })));
+    }
+    window.tankPreviewReady = true;
+</script>
+</body>
+</html>

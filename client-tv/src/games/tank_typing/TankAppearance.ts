@@ -19,6 +19,27 @@ import tracks4 from './assets/player/level-4/tracks.png';
 import wheel4 from './assets/player/level-4/wheel.png';
 import tread4 from './assets/player/level-4/tread.png';
 
+import hull5 from './assets/player/level-5/hull.png';
+import turret5 from './assets/player/level-5/turret.png';
+import tracks5 from './assets/player/level-5/tracks.png';
+import wheel5 from './assets/player/level-5/wheel.png';
+import tread5 from './assets/player/level-5/tread.png';
+import hull6 from './assets/player/level-6/hull.png';
+import turret6 from './assets/player/level-6/turret.png';
+import tracks6 from './assets/player/level-6/tracks.png';
+import wheel6 from './assets/player/level-6/wheel.png';
+import tread6 from './assets/player/level-6/tread.png';
+import hull7 from './assets/player/level-7/hull.png';
+import turret7 from './assets/player/level-7/turret.png';
+import tracks7 from './assets/player/level-7/tracks.png';
+import wheel7 from './assets/player/level-7/wheel.png';
+import tread7 from './assets/player/level-7/tread.png';
+import hull8 from './assets/player/level-8/hull.png';
+import turret8 from './assets/player/level-8/turret.png';
+import tracks8 from './assets/player/level-8/tracks.png';
+import wheel8 from './assets/player/level-8/wheel.png';
+import tread8 from './assets/player/level-8/tread.png';
+
 export interface SpritePart { image: string; x: number; y: number; width: number; height: number }
 
 export interface TankAppearance {
@@ -62,5 +83,37 @@ export const PLAYER_APPEARANCES: Readonly<Record<number, TankAppearance>> = {
         wheel: { image: wheel4, radius: 17.5, centers: [-88, -57, -26, 5, 36, 67, 98, 129, 160] },
         tread: { image: tread4, count: 60, width: 12, height: 8 },
         trackPath: { left: -88, right: 160, y: 26, radius: 26 },
+    },
+    5: {
+        hull: { image: hull5, x: -130, y: -105, width: 360, height: 120 },
+        turret: { image: turret5, x: -10, y: -195, width: 160, height: 120 },
+        tracks: { image: tracks5, x: -125, y: 10, width: 360, height: 58 },
+        wheel: { image: wheel5, radius: 16, centers: [-96.0, -63.11, -30.22, 2.67, 35.56, 68.44, 101.33, 134.22, 167.11, 200.0] },
+        tread: { image: tread5, count: 64, width: 12, height: 8 },
+        trackPath: { left: -96, right: 200, y: 39, radius: 25 },
+    },
+    6: {
+        hull: { image: hull6, x: -130, y: -112, width: 380, height: 126 },
+        turret: { image: turret6, x: -5, y: -210, width: 172, height: 130 },
+        tracks: { image: tracks6, x: -125, y: 10, width: 380, height: 58 },
+        wheel: { image: wheel6, radius: 16, centers: [-96.0, -64.4, -32.8, -1.2, 30.4, 62.0, 93.6, 125.2, 156.8, 188.4, 220.0] },
+        tread: { image: tread6, count: 68, width: 12, height: 8 },
+        trackPath: { left: -96, right: 220, y: 39, radius: 25 },
+    },
+    7: {
+        hull: { image: hull7, x: -130, y: -120, width: 400, height: 132 },
+        turret: { image: turret7, x: 0, y: -227, width: 184, height: 140 },
+        tracks: { image: tracks7, x: -125, y: 10, width: 400, height: 58 },
+        wheel: { image: wheel7, radius: 16, centers: [-96.0, -65.45, -34.91, -4.36, 26.18, 56.73, 87.27, 117.82, 148.36, 178.91, 209.45, 240.0] },
+        tread: { image: tread7, count: 72, width: 12, height: 8 },
+        trackPath: { left: -96, right: 240, y: 39, radius: 25 },
+    },
+    8: {
+        hull: { image: hull8, x: -130, y: -150, width: 420, height: 170 },
+        turret: { image: turret8, x: 5, y: -258, width: 196, height: 150 },
+        tracks: { image: tracks8, x: -125, y: 10, width: 420, height: 58 },
+        wheel: { image: wheel8, radius: 16, centers: [-96.0, -66.33, -36.67, -7.0, 22.67, 52.33, 82.0, 111.67, 141.33, 171.0, 200.67, 230.33, 260.0] },
+        tread: { image: tread8, count: 76, width: 12, height: 8 },
+        trackPath: { left: -96, right: 260, y: 39, radius: 25 },
     },
 };

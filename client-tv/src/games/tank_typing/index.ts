@@ -9,6 +9,8 @@ import { TargetQueue } from './TargetQueue';
 import type { LetterTarget } from './TargetQueue';
 import { ENEMY_TANKS } from './EnemyTanks';
 import { ENEMY_AIRCRAFT as PLANES, aircraftDropPoint, aircraftLetterY, renderAircraft } from './EnemyAircraft';
+import { LearningGuide } from './LearningGuide';
+import './tank-typing.css';
 
 interface Projectile extends LetterTarget {
     kind: 'projectile';
@@ -35,6 +37,7 @@ interface Particle { vx: number; vy: number; size: number; color: string; star: 
 interface Effect {
     x: number; y: number; age: number; duration: number; size: number;
     color: string; label: string; particles: Particle[];
+    energy?: AmmunitionDefinition['effect'];
 }
 
 const TANKS = ENEMY_TANKS.length ? ENEMY_TANKS : [
@@ -44,10 +47,14 @@ const TANKS = ENEMY_TANKS.length ? ENEMY_TANKS : [
     { name: 'Xe cầu vồng', color: '#ad9ae0', accent: '#7560aa', health: 5, scale: 1.02 },
 ];
 const CONFETTI = ['#ffe480', '#f99fc7', '#93e3ed', '#b5e682', '#c5b1ff'];
+const THEMES = [
+    { sky: '#a3e9ee', light: '#fffbd7', grass: '#a6c866' },
+    { sky: '#b5d9f1', light: '#f8e7f0', grass: '#a3c681' },
+    { sky: '#f4d8b4', light: '#fff2d6', grass: '#b1cb79' },
+];
 
 const W = 1200;
 const H = 700;
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export class TankTyping extends GameBase {
     readonly gameId = 'tank_typing';
@@ -81,19 +88,48 @@ export class TankTyping extends GameBase {
     private state: 'ready' | 'playing' | 'paused' | 'game_over' = 'ready';
     private message = '';
     private messageTime = 0;
+    private lesson = new LearningGuide();
+    private idleTime = 0;
+    private root!: HTMLElement;
+    private playfield!: HTMLElement;
+    private resizeObserver?: ResizeObserver;
+    private viewHeight = H;
+    private airShift = 0;
+    private keyLetters = '';
+    private lastHint = '';
+    private uiState = '';
 
     init(): void {
         this.canvas = document.createElement('canvas');
         this.canvas.width = W;
         this.canvas.height = H;
-        this.canvas.style.cssText = 'display:block;width:100%;height:100%;object-fit:contain;background:#dff6e9;touch-action:manipulation';
-        this.canvas.setAttribute('aria-label', 'Xe tăng chữ cái. Nhấn Enter để chơi, gõ chữ trên đạn để chặn, Escape để tạm dừng.');
+        this.canvas.setAttribute('aria-label', 'Xe tăng chữ cái');
         this.canvas.tabIndex = 0;
-        this.container.appendChild(this.canvas);
+        this.root = document.createElement('section'); this.root.className = 'tank-game';
+        this.root.innerHTML = `
+            <header class="tank-hud">
+                <strong class="tank-score">★ 0</strong><span class="tank-reward" aria-label="Vòng 5 chữ">☆☆☆☆☆</span><span class="tank-level">Xe 1</span>
+                <label class="tank-health"><span aria-hidden="true">♥</span><progress max="5" value="5" aria-label="Độ bền xe"></progress></label>
+                <button class="tank-pause" type="button" aria-label="Tạm dừng">Ⅱ</button>
+            </header>
+            <div class="tank-playfield">
+                <div class="tank-menu"><div class="tank-menu-card">
+                    <h2>Xe tăng chữ cái</h2><p>Chạm hoặc gõ chữ giống mẫu</p>
+                    <button class="tank-start-local" type="button">Bắt đầu</button>
+                    <button class="tank-exit" type="button">Về danh sách</button>
+                </div></div>
+            </div>
+            <footer class="tank-learning">
+                <div class="tank-cue"><span>Tìm chữ</span><strong class="tank-hint">A a</strong><span class="tank-feedback" role="status" aria-live="polite"></span></div>
+                <div class="tank-keys" role="group" aria-label="Chọn chữ giống mẫu"></div>
+            </footer>`;
+        this.playfield = this.root.querySelector('.tank-playfield')!;
+        this.playfield.prepend(this.canvas); this.container.appendChild(this.root);
+        this.root.addEventListener('click', this.onControlClick);
         this.ctx = this.canvas.getContext('2d')!;
         for (const level of TANK_LEVELS) {
             for (const part of ['hull', 'turret', 'tracks', 'wheel', 'tread'] as const) sprite(level.appearance[part].image);
-            level.weapons.forEach(weapon => sprite(weapon.image));
+            level.weapons.forEach(weapon => { sprite(weapon.image); sprite(weapon.ammunition.image); });
         }
         PLANES.forEach(type => {
             sprite(type.body.image); sprite(type.ammunition.image);
@@ -103,7 +139,10 @@ export class TankTyping extends GameBase {
         window.addEventListener('keyup', this.onKeyUp);
         window.addEventListener('blur', this.onBlur);
         document.addEventListener('visibilitychange', this.onVisibility);
-        this.canvas.addEventListener('click', this.onClick);
+        this.resizeObserver = new ResizeObserver(this.resizeCanvas);
+        this.resizeObserver.observe(this.playfield);
+        window.addEventListener('resize', this.resizeCanvas);
+        this.resizeCanvas();
         this.canvas.focus();
         this.emitState('idle');
         this.frame = requestAnimationFrame(this.tick);
@@ -127,6 +166,8 @@ export class TankTyping extends GameBase {
         this.targetQueue.clear();
         this.respawn = { tank: 0, plane: 0 };
         this.streak = 0;
+        this.lesson = new LearningGuide(); this.idleTime = 0;
+        this.lastHint = '';
         this.spawnEnemy('tank');
         this.spawnEnemy('plane');
         this.messageTime = 0;
@@ -139,6 +180,8 @@ export class TankTyping extends GameBase {
             score: this.score, health: this.health, destroyed: this.destroyed,
             maxHealth: this.player.maxHealth,
             level: this.player.level, weapons: this.player.weapons.length,
+            practiceLetters: this.controlLetters(), hintLetter: this.hintTarget()?.letter ?? '',
+            showHint: this.idleTime >= 4,
         });
     }
 
@@ -159,15 +202,8 @@ export class TankTyping extends GameBase {
         } else if (event.key === 'Enter' && (this.state === 'ready' || this.state === 'game_over')) {
             event.preventDefault();
             this.start();
-        } else if (event.key === 'Enter' && this.state === 'playing') {
-            event.preventDefault();
-            this.reconcileTargets();
-            const letters = this.targetQueue.letters;
-            if (letters.length) this.intercept(letters[Math.floor(Math.random() * letters.length)]);
-            else {
-                this.message = 'Chờ mục tiêu hoặc súng nạp đạn nhé!';
-                this.messageTime = 1;
-            }
+        } else if (event.key === 'Enter' && this.state === 'paused') {
+            event.preventDefault(); this.togglePause();
         } else if (/^[a-z]$/i.test(event.key)) {
             event.preventDefault();
             this.intercept(event.key.toUpperCase());
@@ -187,17 +223,84 @@ export class TankTyping extends GameBase {
         if (document.hidden && this.state === 'playing') this.togglePause();
     };
 
-    private onClick = (event: MouseEvent): void => {
-        const bounds = this.canvas.getBoundingClientRect();
-        const scale = Math.min(bounds.width / W, bounds.height / H);
-        const x = (event.clientX - bounds.left - (bounds.width - W * scale) / 2) / scale;
-        const y = (event.clientY - bounds.top - (bounds.height - H * scale) / 2) / scale;
-        if (x > 1080 && y < 88 && y > 20) this.togglePause();
-        else if (x > 400 && x < 800 && y > 410 && y < 480) {
-            if (this.state === 'ready' || this.state === 'game_over') this.start();
-            else if (this.state === 'paused') this.togglePause();
-        } else if (this.state !== 'playing' && x > 450 && x < 750 && y > 490 && y < 540) this.onExit();
+    private onControlClick = (event: MouseEvent): void => {
+        const button = (event.target as Element).closest<HTMLButtonElement>('button');
+        if (!button || button.disabled) return;
+        if (button.dataset.letter) this.intercept(button.dataset.letter);
+        else if (button.dataset.move && this.state === 'playing') this.player.move(Number(button.dataset.move) * 38);
+        else if (button.classList.contains('tank-pause')) this.togglePause();
+        else if (button.classList.contains('tank-start-local')) {
+            if (this.state === 'paused') this.togglePause(); else this.start();
+        } else if (button.classList.contains('tank-exit')) this.onExit();
     };
+
+    private resizeCanvas = (): void => {
+        const bounds = this.playfield.getBoundingClientRect();
+        const width = bounds.width || W, height = bounds.height || H;
+        this.viewHeight = Math.max(600, Math.min(1600, W * height / width));
+        const airShift = Math.max(0, this.viewHeight - H) * 0.75;
+        this.enemies.forEach(enemy => { if (enemy.kind === 'plane') enemy.y += this.airShift - airShift; });
+        this.airShift = airShift;
+        const fit = Math.min(width / W, height / this.viewHeight);
+        const density = Math.min(fit * (window.devicePixelRatio || 1), Math.sqrt(4000000 / (W * this.viewHeight)));
+        this.canvas.width = Math.max(1, Math.round(W * density));
+        this.canvas.height = Math.max(1, Math.round(this.viewHeight * density));
+        this.canvas.style.width = `${W * fit}px`; this.canvas.style.height = `${this.viewHeight * fit}px`;
+    };
+
+    private hintTarget(): Enemy | Projectile | undefined {
+        const busy = new Set([...this.player.weapons.flatMap(weapon => [...weapon.pendingTargetIds]), ...this.shells.map(shell => shell.targetId)]);
+        const targets = this.getTargets().filter(target => !busy.has(target.id));
+        return targets.filter((target): target is Projectile => target.kind === 'projectile').sort((a, b) => b.progress - a.progress)[0]
+            ?? targets.find(target => target.kind === 'plane') ?? targets[0];
+    }
+
+    private controlLetters(): string {
+        const limit = this.root?.clientWidth < 600 ? 4 : 6;
+        return [...new Set([this.hintTarget()?.letter, ...this.getTargets().map(target => target.letter), ...this.lesson.letters].filter((letter): letter is string => !!letter))]
+            .slice(0, limit).sort().join('');
+    }
+
+    private refreshUI(): void {
+        const hint = this.hintTarget()?.letter ?? this.enemies[0]?.letter ?? this.lesson.letters[0];
+        const setText = (selector: string, value: string) => {
+            const element = this.root.querySelector<HTMLElement>(selector)!;
+            if (element.textContent !== value) element.textContent = value;
+        };
+        setText('.tank-score', `★ ${this.score}`); setText('.tank-level', `Xe ${this.player.level}`);
+        const stars = this.lesson.correct ? (this.lesson.correct - 1) % 5 + 1 : 0;
+        setText('.tank-reward', '★'.repeat(stars) + '☆'.repeat(5 - stars));
+        setText('.tank-hint', `${hint} ${hint.toLowerCase()}`);
+        setText('.tank-feedback', this.messageTime > 0 ? this.message : '');
+        const health = this.root.querySelector('progress')!;
+        health.max = this.player.maxHealth; health.value = this.health;
+        const letters = this.controlLetters();
+        const keys = this.root.querySelector('.tank-keys')!;
+        if (letters !== this.keyLetters) {
+            this.keyLetters = letters;
+            keys.innerHTML = `<button class="tank-drive-local" data-move="-1" type="button" aria-label="Lái sang trái">◀</button>`
+                + [...letters].map(letter => `<button class="tank-letter" type="button" data-letter="${letter}" aria-label="Chữ ${letter}">${letter}</button>`).join('')
+                + `<button class="tank-drive-local" data-move="1" type="button" aria-label="Lái sang phải">▶</button>`;
+        }
+        keys.querySelectorAll<HTMLButtonElement>('button').forEach(button => {
+            button.disabled = this.state !== 'playing';
+            button.classList.toggle('is-hint', this.state === 'playing' && this.idleTime >= 4 && button.dataset.letter === hint);
+        });
+        const menu = this.root.querySelector<HTMLElement>('.tank-menu')!;
+        menu.hidden = this.state === 'playing';
+        if (this.uiState !== this.state) {
+            this.uiState = this.state;
+            const pause = this.root.querySelector<HTMLButtonElement>('.tank-pause')!;
+            pause.disabled = this.state === 'ready' || this.state === 'game_over';
+            pause.textContent = this.state === 'paused' ? '▶' : 'Ⅱ';
+            pause.setAttribute('aria-label', this.state === 'paused' ? 'Tiếp tục' : 'Tạm dừng');
+            setText('.tank-menu h2', this.state === 'paused' ? 'Nghỉ một chút' : this.state === 'game_over' ? 'Cùng chơi lại nhé!' : 'Xe tăng chữ cái');
+            setText('.tank-menu p', this.state === 'game_over' ? `★ ${this.score}` : this.state === 'paused' ? 'Sẵn sàng chưa?' : 'Chạm hoặc gõ chữ giống mẫu');
+            setText('.tank-start-local', this.state === 'paused' ? 'Tiếp tục' : this.state === 'game_over' ? 'Chơi lại' : 'Bắt đầu');
+        }
+        const hintState = `${hint}:${this.idleTime >= 4}:${letters}`;
+        if (this.state === 'playing' && hintState !== this.lastHint) { this.lastHint = hintState; this.sync(); }
+    }
 
     protected onInput(event: GameInputEvent): void {
         if (event.state === 'released') return;
@@ -252,19 +355,16 @@ export class TankTyping extends GameBase {
             assigned++;
         }
         if (!assigned) {
-            if (this.targetQueue.has(letter)) this.message = this.player.weapons.some(weapon => weapon.isReady)
-                ? `Mục tiêu ${letter} đang được bắn, chờ một chút nhé!`
-                : 'Súng đang nạp đạn, chờ một chút nhé!';
-            else {
-                this.streak = 0;
-                this.message = `Tìm chữ ${letter} trên xe và đạn nhé!`;
+            if (!this.targetQueue.has(letter) && this.hintTarget()) {
+                this.streak = 0; this.lesson.struggle(); this.idleTime = Math.max(4, this.idleTime);
+                this.message = 'Thử lại nhé'; this.messageTime = 1.2; this.sync();
             }
-            this.messageTime = 1;
             return;
         }
+        this.lesson.success(this.idleTime); this.idleTime = 0;
         this.streak++;
         this.score += 10;
-        this.message = this.streak % 5 === 0 ? `Tuyệt vời! ${this.streak} chữ đúng liên tiếp! ★` : `Đúng rồi! ${letter}  ${letter.toLowerCase()}  ★`;
+        this.message = this.streak % 5 === 0 ? 'Giỏi lắm! ★' : 'Đúng rồi!';
         this.messageTime = 1.2;
         this.upgradeForScore();
         this.sync();
@@ -274,9 +374,9 @@ export class TankTyping extends GameBase {
         const level = this.tankFactory.levelForScore(this.score);
         if (level <= this.player.level) return;
         this.tankFactory.upgrade(this.player, level);
-        this.message = `Nâng cấp Level ${level}! Phục hồi đầy độ bền ${this.player.maxHealth}!`;
+        this.message = 'Xe mới! ★';
         this.messageTime = 2.5;
-        this.burst(this.player.x, this.player.y - 75, true, `LEVEL ${level} ★`);
+        this.burst(this.player.x, this.player.y - 75, true, '★');
     }
 
     private tick = (time: number): void => {
@@ -295,29 +395,28 @@ export class TankTyping extends GameBase {
         const variant = kind === 'tank' ? this.tankVariant++ % TANKS.length : this.planeVariant++ % PLANES.length;
         const id = this.nextEnemyId++;
         const used = new Set([...this.enemies.map(enemy => enemy.letter), ...this.projectiles.map(projectile => projectile.letter)]);
-        const unlocked = ALPHABET.slice(0, Math.min(26, 6 + Math.floor(this.score / 40) * 2));
-        let letters = [...unlocked].filter(letter => !used.has(letter));
-        if (!letters.length) letters = [...ALPHABET].filter(letter => !used.has(letter));
-        const letter = letters[Math.floor(Math.random() * letters.length)];
+        const letter = this.lesson.chooseLetter(used);
         this.enemies.push(kind === 'tank'
             ? this.tankFactory.createEnemy(id, variant, TANKS[variant], letter)
-            : { id, kind: 'plane', variant, letter, x: 1310, y: 200 + variant * 22, health: 1, maxHealth: 1, flash: 0 });
+            : { id, kind: 'plane', variant, letter, x: 1310, y: 200 + variant * 22 - this.airShift, health: 1, maxHealth: 1, flash: 0 });
     }
 
-    private burst(x: number, y: number, large: boolean, label = ''): void {
+    private burst(x: number, y: number, large: boolean, label = '', ammunition?: AmmunitionDefinition): void {
+        const energy = ammunition?.effect, color = ammunition?.effectColor ?? ammunition?.color;
         this.effects.push({ x, y, age: 0, duration: large ? 1.5 : 1.05,
-            size: large ? 100 : 48, color: large ? '#ffbc64' : '#ffe785', label,
-            particles: Array.from({ length: large ? 36 : 18 }, (_, i) => {
+            size: energy ? (large ? 80 : 38) : large ? 100 : 48, color: energy && color ? color : large ? '#ffbc64' : '#ffe785', label, energy,
+            particles: Array.from({ length: energy ? (large ? 24 : 12) : large ? 36 : 18 }, (_, i) => {
                 const angle = Math.random() * Math.PI * 2;
                 const speed = (large ? 85 : 45) + Math.random() * (large ? 190 : 120);
                 return { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 45,
-                    size: 4 + Math.random() * 8, color: CONFETTI[i % CONFETTI.length], star: i % 3 === 0 };
+                    size: 4 + Math.random() * 8, color: energy && color ? (i % 3 ? color : '#fff5cc') : CONFETTI[i % CONFETTI.length], star: i % 3 === 0 };
             }),
         });
     }
 
     private update(dt: number): void {
         this.elapsed += dt;
+        this.idleTime += dt;
         const direction = Number(this.heldDirections.has('ArrowRight')) - Number(this.heldDirections.has('ArrowLeft'));
         this.player.move(direction * 280 * dt);
         this.shells.push(...this.player.update(dt, this.getTargets()));
@@ -334,7 +433,7 @@ export class TankTyping extends GameBase {
         for (const enemy of [...this.enemies]) {
             if (enemy.kind === 'plane') {
                 enemy.flash = Math.max(0, enemy.flash - dt);
-                enemy.x -= PLANES[enemy.variant].speed * dt;
+                enemy.x -= PLANES[enemy.variant].speed * this.lesson.flightSpeed * dt;
                 if (enemy.x < -120) {
                     this.enemies.splice(this.enemies.indexOf(enemy), 1);
                     this.respawn.plane = 0.8;
@@ -344,7 +443,7 @@ export class TankTyping extends GameBase {
         if (this.spawnTime <= 0) {
             const sources = this.enemies.filter(e => e.kind === 'plane' ? e.x > 430 && e.x < 1100 : e.x <= 1070 && e.readyWeapons.length > 0);
             const source = sources[Math.floor(Math.random() * sources.length)];
-            if (source && this.projectiles.length < 5) {
+            if (source && this.projectiles.length < this.lesson.projectileLimit) {
                 const bomb = source.kind === 'plane';
                 const drop = source.kind === 'plane' ? aircraftDropPoint(source, this.elapsed) : source;
                 let x = drop.x, y = drop.y;
@@ -359,13 +458,13 @@ export class TankTyping extends GameBase {
                 }
                 this.projectiles.push({ id: this.nextProjectileId--, health: ammunition.defense, maxHealth: ammunition.defense,
                     kind: 'projectile', x, y, startX: x, startY: y, progress: 0, ammunition,
-                    duration: Math.max(6, 11 - this.score / 180), bomb,
+                    duration: this.lesson.flightDuration, bomb,
                     letter: source.letter, sourceId: source.id });
-                this.spawnTime = Math.max(1.9, (source.kind === 'tank' ? source.style.fireInterval ?? 3.5 : 3.5) - this.score / 250);
+                this.spawnTime = Math.max(this.lesson.interval, source.kind === 'tank' ? source.style.fireInterval ?? 3.5 : 3.5);
             } else this.spawnTime = 0.4;
         }
         for (const p of [...this.projectiles]) {
-            p.progress += dt / p.duration;
+            p.progress += dt / p.duration * (this.idleTime >= 4 ? 0.7 : 1);
             p.x = p.startX + (this.playerX + 40 - p.startX) * p.progress;
             p.y = p.startY + (495 - p.startY) * p.progress - (p.bomb ? 0 : Math.sin(p.progress * Math.PI) * 75);
             if (p.progress >= 1) {
@@ -374,7 +473,9 @@ export class TankTyping extends GameBase {
                 this.player.takeDamage(p.ammunition?.attack ?? 1);
                 this.streak = 0;
                 this.burst(this.playerX + 15, 485, false);
-                this.message = 'Xe bị trúng đạn! Cố lên nhé!';
+                this.lesson.struggle();
+                this.idleTime = Math.max(4, this.idleTime);
+                this.message = 'Cùng thử tiếp nhé!';
                 this.messageTime = 1.5;
                 if (this.health <= 0) this.state = 'game_over';
                 this.sync();
@@ -396,25 +497,26 @@ export class TankTyping extends GameBase {
                 target.health = Math.max(0, target.health - shell.attack);
                 if (target.health === 0) {
                     this.projectiles.splice(this.projectiles.indexOf(target), 1);
-                    this.burst(target.x, target.y, false, `${target.letter} ★`);
-                } else this.burst(target.x, target.y, false, `-${shell.attack}`);
+                    this.burst(target.x, target.y, false, `${target.letter} ★`, shell.definition);
+                } else this.burst(target.x, target.y, false, '', shell.definition);
                 continue;
             }
             if (target.kind === 'tank') target.takeDamage(shell.attack);
             else { target.health = Math.max(0, target.health - shell.attack); target.flash = 0.2; }
             if (target.health <= 0) {
-                this.burst(target.x, target.y, true, 'BÙM!  +30');
+                this.burst(target.x, target.y, true, '★', shell.definition);
                 this.enemies.splice(this.enemies.indexOf(target), 1);
                 this.respawn[target.kind] = target.kind === 'tank' ? 1.8 : 1.2;
                 this.destroyed++;
                 this.score += 30;
-                this.message = 'Giỏi lắm! Thêm một ngôi sao cho con! ★';
+                this.message = 'Giỏi lắm! ★';
                 this.messageTime = 1.7;
                 this.upgradeForScore();
-            } else this.burst(target.x, target.y - 30, false);
+            } else this.burst(target.x, target.y - 30, false, '', shell.definition);
             this.sync();
         }
         this.reconcileTargets();
+        if (!this.hintTarget()) this.idleTime = 0;
     }
 
     private box(x: number, y: number, w: number, h: number, fill: string, radius = 16): void {
@@ -479,11 +581,12 @@ export class TankTyping extends GameBase {
         }
         c.shadowBlur = 0;
         c.restore();
-        this.circle(0, 25, 23, '#fffdf0');
-        this.text(p.letter, 0, 26, 33, '#34465e');
-        this.box(-28, 55, 56, 10, '#d9d9c9', 4);
-        c.fillStyle = '#8dbb55'; c.fillRect(-26, 57, 52 * p.health / p.maxHealth, 6);
-        this.text(`${p.health}/${p.maxHealth}`, 0, 77, 13);
+        this.circle(0, 25, 30, '#fffdf0');
+        this.text(p.letter, 0, 26, 42, '#34465e');
+        if (p.health < p.maxHealth) {
+            this.box(-28, 55, 56, 8, '#d9d9c9', 4);
+            c.fillStyle = '#8dbb55'; c.fillRect(-26, 57, 52 * p.health / p.maxHealth, 4);
+        }
         c.restore();
     }
 
@@ -491,7 +594,15 @@ export class TankTyping extends GameBase {
         const c = this.ctx;
         const t = effect.age / effect.duration;
         c.save();
-        if (t < 0.5) {
+        if (effect.energy && t < 0.65) {
+            const progress = t / 0.65, radius = effect.size * (0.15 + progress);
+            c.globalAlpha = (1 - progress) * 0.8;
+            c.strokeStyle = effect.color; c.lineWidth = 3 * (1 - progress) + 1;
+            c.beginPath(); c.arc(effect.x, effect.y, radius, 0, Math.PI * 2); c.stroke();
+            c.strokeStyle = '#fff9da'; c.lineWidth = 2;
+            c.beginPath(); c.ellipse(effect.x, effect.y, radius * 0.65, radius * 0.35, -0.35, 0, Math.PI * 2); c.stroke();
+            this.star(effect.x, effect.y, effect.size * (1 - progress) * 0.22, '#fff8d5', progress);
+        } else if (!effect.energy && t < 0.5) {
             c.globalAlpha = (1 - t * 2) * 0.8;
             const radius = effect.size * (0.3 + t * 2.5);
             for (let i = 0; i < 7; i++) {
@@ -526,9 +637,13 @@ export class TankTyping extends GameBase {
 
     private draw(): void {
         const c = this.ctx;
-        const sky = c.createLinearGradient(0, 0, 0, H);
-        sky.addColorStop(0, '#a3e9ee'); sky.addColorStop(1, '#fffbd7');
-        c.fillStyle = sky; c.fillRect(0, 0, W, H);
+        c.setTransform(this.canvas.width / W, 0, 0, this.canvas.height / this.viewHeight, 0, 0);
+        const offset = this.viewHeight - 670;
+        c.translate(0, offset);
+        const sky = c.createLinearGradient(0, -offset, 0, H);
+        const theme = THEMES[Math.floor(this.lesson.correct / 10) % THEMES.length];
+        sky.addColorStop(0, theme.sky); sky.addColorStop(1, theme.light);
+        c.fillStyle = sky; c.fillRect(0, -offset, W, this.viewHeight);
         this.circle(1070, 128, 44, '#ffe593');
         for (const [x, y] of [[120, 160], [440, 120], [750, 170]]) {
             for (let i = 0; i < 4; i++) this.circle(x + i * 28, y + Math.sin(i * 2) * 10, 28, '#f6fff3');
@@ -538,19 +653,11 @@ export class TankTyping extends GameBase {
             c.lineTo(i * 260 + 300, 480); c.fillStyle = i % 2 ? '#b5d7b7' : '#9ecbb5'; c.fill();
         }
         c.fillStyle = '#c7db7a'; c.beginPath(); c.ellipse(280, 540, 850, 140, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#a6c866'; c.fillRect(0, 540, W, 160);
+        c.fillStyle = theme.grass; c.fillRect(0, 540, W, 160);
         c.fillStyle = '#d8cf94'; c.fillRect(0, 563, W, 45);
         for (let i = 0; i < 25; i++) {
             this.circle(i * 53, 620 + (i % 3) * 17, 3, '#779f56');
         }
-        this.box(24, 22, 320, 66, '#fffbea');
-        this.text(`XE TĂNG · LEVEL ${this.player.level}`, 184, 54, 26);
-        this.box(365, 22, 240, 66, '#fffbea'); this.text(`★ ${this.score}   •   Hạ ${this.destroyed}`, 485, 54, 23);
-        this.box(625, 22, 435, 66, '#fffbea'); this.text('ĐỘ BỀN', 690, 43, 16);
-        this.text(`${this.health}/${this.player.maxHealth}`, 690, 67, 18);
-        const healthStep = 290 / this.player.maxHealth;
-        for (let i = 0; i < this.player.maxHealth; i++) this.box(750 + i * healthStep, 42, healthStep - 4, 25, i < this.health ? '#8dbb55' : '#d9d9c9', 4);
-        this.box(1080, 22, 94, 66, '#fffbea'); this.text(this.state === 'paused' ? '▶' : 'Ⅱ', 1127, 54, 25);
         this.player.render(c);
         for (const enemy of this.enemies) {
             c.save();
@@ -558,32 +665,26 @@ export class TankTyping extends GameBase {
             if (enemy.kind === 'tank') {
                 const type = TANKS[enemy.variant];
                 enemy.render(c);
-                this.text(type.name, enemy.x, 624, 18);
-                this.box(enemy.x - 70, 588, 140, 14, '#e4dfc4', 4);
-                c.fillStyle = type.color; c.fillRect(enemy.x - 68, 590, 136 * enemy.health / enemy.maxHealth, 10);
-                this.text(`${enemy.health}/${enemy.maxHealth}`, enemy.x, 595, 12);
+                if (enemy.health < enemy.maxHealth) {
+                    this.box(enemy.x - 55, 588, 110, 10, '#e4dfc4', 4);
+                    c.fillStyle = type.color; c.fillRect(enemy.x - 53, 590, 106 * enemy.health / enemy.maxHealth, 6);
+                }
             } else renderAircraft(c, enemy, this.elapsed);
             c.restore();
-            const letterY = enemy.kind === 'tank' ? enemy.letterY : aircraftLetterY(enemy, this.elapsed);
-            this.box(enemy.x - 30, letterY - 27, 60, 54, '#fffdf0', 14);
-            this.text(enemy.letter, enemy.x, letterY, 36);
+            const letterY = enemy.kind === 'tank' ? enemy.letterY : aircraftLetterY(enemy, this.elapsed, 710 - this.viewHeight);
+            this.box(enemy.x - 37, letterY - 32, 74, 64, '#fffdf0', 14);
+            this.text(enemy.letter, enemy.x, letterY, 44);
         }
         for (const p of this.projectiles) this.drawProjectile(p);
+        const hint = this.hintTarget();
+        if (hint && this.idleTime >= 4) {
+            const y = hint.kind === 'projectile' ? hint.y + 25 : hint.kind === 'tank' ? hint.letterY : aircraftLetterY(hint, this.elapsed, 710 - this.viewHeight);
+            c.beginPath(); c.arc(hint.x, y, 38 + Math.sin(this.elapsed * 3) * 2, 0, Math.PI * 2);
+            c.strokeStyle = '#d49b34'; c.lineWidth = 5; c.stroke();
+        }
         this.shells.forEach(shell => shell.render(c));
         for (const effect of this.effects) this.drawEffect(effect);
-        if (this.messageTime > 0) this.text(this.message, 600, 320, 26);
-        this.text('← → LÁI XE  •  Gõ chữ: bắn đạn trước, xe địch sau  •  Esc: tạm dừng', 600, 666, 21);
-        if (this.state !== 'playing') {
-            c.fillStyle = '#23443788'; c.fillRect(0, 0, W, H);
-            this.box(270, 155, 660, 410, '#fffbed', 28);
-            this.text(this.state === 'ready' ? 'BIỆT ĐỘI CHỮ CÁI' : this.state === 'paused' ? 'NGHỈ MỘT CHÚT!' : 'XE CẦN SỬA RỒI!', 600, 214, 36);
-            this.text(this.state === 'game_over' ? `Con ghi được ${this.score} điểm • Hạ ${this.destroyed} mục tiêu` : 'Bảo vệ chiếc xe tăng của con!', 600, 278, 24);
-            this.text('1. Mỗi xe địch mang một chữ cái riêng.', 600, 324, 21);
-            this.text('2. Gõ đúng: mỗi súng bắn một mục tiêu khác nhau.', 600, 360, 21);
-            this.box(400, 415, 400, 62, '#bedb66');
-            this.text(this.state === 'paused' ? 'TIẾP TỤC  ·  ESC' : this.state === 'ready' ? 'BẮT ĐẦU  ·  ENTER' : 'CHƠI LẠI  ·  ENTER', 600, 447, 25);
-            this.text('Về danh sách game', 600, 516, 20);
-        }
+        this.refreshUI();
     }
 
     destroy(): void {
@@ -592,7 +693,9 @@ export class TankTyping extends GameBase {
         window.removeEventListener('keyup', this.onKeyUp);
         window.removeEventListener('blur', this.onBlur);
         document.removeEventListener('visibilitychange', this.onVisibility);
-        this.canvas.removeEventListener('click', this.onClick);
-        this.canvas.remove();
+        window.removeEventListener('resize', this.resizeCanvas);
+        this.resizeObserver?.disconnect();
+        this.root.removeEventListener('click', this.onControlClick);
+        this.root.remove();
     }
 }

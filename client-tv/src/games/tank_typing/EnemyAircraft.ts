@@ -61,10 +61,10 @@ export function aircraftDropPoint(plane: AircraftPose, elapsed: number): Point {
     return { x: plane.x + drop.x, y: plane.y + drop.y + aircraftBob(plane, elapsed) };
 }
 
-export function aircraftLetterY(plane: AircraftPose, elapsed: number): number {
+export function aircraftLetterY(plane: AircraftPose, elapsed: number, minimumY = 122): number {
     const type = ENEMY_AIRCRAFT[plane.variant];
     const top = Math.min(type.body.y, ...type.moving.map(part => part.y - part.height * part.pivotY));
-    return Math.max(122, plane.y + aircraftBob(plane, elapsed) + top - 34);
+    return Math.max(minimumY, plane.y + aircraftBob(plane, elapsed) + top - 34);
 }
 
 export function renderAircraft(c: CanvasRenderingContext2D, plane: AircraftPose, elapsed: number): void {

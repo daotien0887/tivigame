@@ -1,0 +1,60 @@
+.desktop-game.tank-desktop #game-container { height: 100dvh; }
+.desktop-game.tank-desktop .desktop-controls { display: none; }
+.tank-game {
+    box-sizing: border-box;
+    width: 100%; height: 100%; min-height: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden; color: #294d41; background: #dff2d6;
+    color-scheme: light;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    font-family: Arial, sans-serif;
+}
+.tank-game *, .tank-game *::before, .tank-game *::after { box-sizing: border-box; }
+.tank-game button { font-family: inherit; font-weight: 800; color: #294d41; cursor: pointer; touch-action: manipulation; }
+.tank-game button:focus-visible { outline: 4px solid #376da9; outline-offset: 3px; }
+.tank-game button:disabled { cursor: default; opacity: .5; }
+.tank-hud { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; background: #fffbea; flex-shrink: 0; }
+.tank-hud strong { font-size: clamp(22px, 2.5vmin, 40px); }
+.tank-health { display: flex; align-items: center; gap: 8px; }
+.tank-health progress { width: clamp(70px, 12vw, 190px); height: 18px; accent-color: #83ad50; }
+.tank-level { font-size: clamp(16px, 2vmin, 28px); }
+.tank-reward { color: #ae7c25; font-size: clamp(20px, 2.5vmin, 38px); letter-spacing: 2px; }
+.tank-pause { min-width: 52px; min-height: 48px; border: 0; border-radius: 12px; background: #e6efc8; font-size: 26px; }
+.tank-playfield { position: relative; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; overflow: hidden; background: linear-gradient(#a3e9ee, #dff2d6); }
+.tank-playfield canvas { display: block; max-width: 100%; max-height: 100%; object-fit: contain; touch-action: manipulation; }
+.tank-menu { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: #23443770; }
+.tank-menu[hidden] { display: none; }
+.tank-menu-card { width: min(90%, 460px); padding: clamp(16px, 3vmin, 32px); display: grid; gap: 16px; text-align: center; background: #fffbed; border-radius: 24px; }
+.tank-menu h2, .tank-menu p { margin: 0; }
+.tank-menu h2 { font-size: clamp(24px, 3vmin, 40px); }
+.tank-menu p { font-size: clamp(18px, 2vmin, 26px); }
+.tank-menu button { min-height: 56px; border: 0; border-radius: 14px; background: #bedb66; font-size: 24px; }
+.tank-menu .tank-exit { background: transparent; font-size: 18px; }
+.tank-learning { padding: 8px 16px 12px; display: grid; gap: 8px; justify-items: center; background: #fffbea; flex-shrink: 0; }
+.tank-cue { min-height: 40px; display: flex; align-items: center; gap: 14px; font-size: clamp(18px, 2.2vmin, 28px); }
+.tank-cue strong { min-width: 76px; font-size: clamp(30px, 3.8vmin, 54px); }
+.tank-feedback { min-width: 100px; color: #577c32; font-size: clamp(16px, 2vmin, 24px); }
+.tank-keys { display: flex; justify-content: center; gap: clamp(6px, 1vw, 16px); width: 100%; }
+.tank-letter, .tank-drive-local { border: 0; border-bottom: 4px solid #96b05c; border-radius: 14px; background: #e5f3b2; min-height: clamp(56px, 7vmin, 96px); }
+.tank-letter { flex: 0 1 100px; min-width: 48px; max-width: 120px; font-size: clamp(28px, 3.5vmin, 52px); }
+.tank-drive-local { width: clamp(48px, 7vw, 80px); flex-shrink: 0; font-size: 24px; }
+.tank-letter.is-hint { background: #ffe697; outline: 4px solid #d49b34; outline-offset: -4px; }
+.tank-letter:active, .tank-drive-local:active { transform: translateY(2px); }
+@media (max-width: 600px) {
+    .tank-level { display: none; }
+    .tank-hud { padding: 6px 10px; gap: 8px; }
+    .tank-learning { padding: 8px; }
+    .tank-cue { gap: 8px; }
+    .tank-feedback { min-width: 0; }
+    .tank-keys { gap: 6px; }
+    .tank-letter { min-width: 44px; }
+    .tank-drive-local { width: 44px; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+    .tank-hud { padding: 4px 12px; }
+    .tank-pause { min-height: 44px; }
+    .tank-learning { padding: 4px 12px; gap: 4px; }
+    .tank-cue { min-height: 28px; }
+    .tank-cue strong { font-size: 28px; }
+    .tank-letter, .tank-drive-local { min-height: 44px; }
+}
