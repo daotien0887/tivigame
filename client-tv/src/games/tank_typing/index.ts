@@ -93,6 +93,7 @@ export class TankTyping extends GameBase {
     private root!: HTMLElement;
     private playfield!: HTMLElement;
     private resizeObserver?: ResizeObserver;
+    private viewWidth = W;
     private viewHeight = H;
     private airShift = 0;
     private keyLetters = '';
@@ -237,15 +238,17 @@ export class TankTyping extends GameBase {
     private resizeCanvas = (): void => {
         const bounds = this.playfield.getBoundingClientRect();
         const width = bounds.width || W, height = bounds.height || H;
-        this.viewHeight = Math.max(600, Math.min(1600, W * height / width));
+        // Match the playfield aspect ratio while preserving sprite proportions.
+        this.viewHeight = Math.max(600, W * height / width);
+        this.viewWidth = Math.max(W, this.viewHeight * width / height);
         const airShift = Math.max(0, this.viewHeight - H) * 0.75;
         this.enemies.forEach(enemy => { if (enemy.kind === 'plane') enemy.y += this.airShift - airShift; });
         this.airShift = airShift;
-        const fit = Math.min(width / W, height / this.viewHeight);
-        const density = Math.min(fit * (window.devicePixelRatio || 1), Math.sqrt(4000000 / (W * this.viewHeight)));
-        this.canvas.width = Math.max(1, Math.round(W * density));
+        const fit = Math.min(width / this.viewWidth, height / this.viewHeight);
+        const density = Math.min(fit * (window.devicePixelRatio || 1), Math.sqrt(4000000 / (this.viewWidth * this.viewHeight)));
+        this.canvas.width = Math.max(1, Math.round(this.viewWidth * density));
         this.canvas.height = Math.max(1, Math.round(this.viewHeight * density));
-        this.canvas.style.width = `${W * fit}px`; this.canvas.style.height = `${this.viewHeight * fit}px`;
+        this.canvas.style.width = `${width}px`; this.canvas.style.height = `${height}px`;
     };
 
     private hintTarget(): Enemy | Projectile | undefined {
@@ -637,25 +640,26 @@ export class TankTyping extends GameBase {
 
     private draw(): void {
         const c = this.ctx;
-        c.setTransform(this.canvas.width / W, 0, 0, this.canvas.height / this.viewHeight, 0, 0);
+        c.setTransform(this.canvas.width / this.viewWidth, 0, 0, this.canvas.height / this.viewHeight, 0, 0);
         const offset = this.viewHeight - 670;
-        c.translate(0, offset);
+        const side = (this.viewWidth - W) / 2;
+        c.translate(side, offset);
         const sky = c.createLinearGradient(0, -offset, 0, H);
         const theme = THEMES[Math.floor(this.lesson.correct / 10) % THEMES.length];
         sky.addColorStop(0, theme.sky); sky.addColorStop(1, theme.light);
-        c.fillStyle = sky; c.fillRect(0, -offset, W, this.viewHeight);
+        c.fillStyle = sky; c.fillRect(-side, -offset, this.viewWidth, this.viewHeight);
         this.circle(1070, 128, 44, '#ffe593');
         for (const [x, y] of [[120, 160], [440, 120], [750, 170]]) {
             for (let i = 0; i < 4; i++) this.circle(x + i * 28, y + Math.sin(i * 2) * 10, 28, '#f6fff3');
         }
-        for (let i = 0; i < 6; i++) {
+        for (let i = Math.floor(-side / 260); i < Math.ceil((W + side) / 260) + 1; i++) {
             c.beginPath(); c.moveTo(i * 260 - 150, 480); c.lineTo(i * 260 + 80, 230 + (i % 2) * 60);
             c.lineTo(i * 260 + 300, 480); c.fillStyle = i % 2 ? '#b5d7b7' : '#9ecbb5'; c.fill();
         }
         c.fillStyle = '#c7db7a'; c.beginPath(); c.ellipse(280, 540, 850, 140, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = theme.grass; c.fillRect(0, 540, W, 160);
-        c.fillStyle = '#d8cf94'; c.fillRect(0, 563, W, 45);
-        for (let i = 0; i < 25; i++) {
+        c.fillStyle = theme.grass; c.fillRect(-side, 540, this.viewWidth, 160);
+        c.fillStyle = '#d8cf94'; c.fillRect(-side, 563, this.viewWidth, 45);
+        for (let i = Math.floor(-side / 53); i < Math.ceil((W + side) / 53); i++) {
             this.circle(i * 53, 620 + (i % 3) * 17, 3, '#779f56');
         }
         this.player.render(c);
